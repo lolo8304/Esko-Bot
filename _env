@@ -1,0 +1,6 @@
+#rename this to .env for localhost
+#defined needed properties in cloud provider
+
+MICROSOFT_APP_ID=
+MICROSOFT_APP_PASSWORD=
+MICROSOFT_LUIS_MODEL=

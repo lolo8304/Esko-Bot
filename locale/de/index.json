@@ -1,0 +1,47 @@
+{
+  "$.Intro.Fehler" : "Sorry - aber ich habe Dich nicht verstanden",
+  "$.Intro.Begruessung" : [
+    "Hallo %s... Mein Name ist Esko vom Sports-Village.ch und freue mich Dir helfen zu können.",
+    "Mit 'start' kannst Du immer wieder von vorne beginnen."
+  ],
+  "$.Intro.Tschuess" : "Tschüss - auf einer ander Mal. Dein Esko vom Sports-Village.ch",
+  "$.Intro.Willkommen": [
+    "Willkommen beim Sports-Village.ch Bot.",
+    "Mein Name ist Esko und ich helfen Dir bei der Auswahl der richtigen Wintersport Ausrüstung"
+  ],
+  "$.Intro.Auswahl": "Wählen Sie unter folgenden Angeboten aus",
+  "$.Intro.Auswahl.Optionen": "Ski|Langlauf|Snowboard",
+  "Ski": "Ski",
+  "$.Ski.Personen": [
+    "Für welche Personen benötigst Du eine Miete?",
+    "",
+    "Bsp: 2 Kinder und 2 Erwachsene",
+    "1 Kind, 2 Erwachsene"
+  ],
+  "$.Ski.BestätigungPersonen": "Ok - das bedeutet insgsamt 3 Personen. Lass uns beginnen.",
+  "$.Person.Start": "Beginnen wir mit dem 1.Erwachsenen",
+  "$.Person.Piste": "Welche Piste fährt der Erwachsene am liebsten?",
+  "blau": "blau",
+  "$.Person.Weitere": "Nun zum 2.Erwachsenen",
+  "rot": "rot",
+  "schwarz": "schwarz",
+  "$.Person.KindAlter": "Wie alt ist Dein Kind oder Jugendlicher?",
+  "unter 12 Jahren": "unter 12 Jahren",
+  "$.Person.KindSchuh": "Welche Schuhgrösse hat Dein Kind?",
+  "25-28": "25-28",
+  "$.Resultat.Titel": "Danke. Ich rechne für Dich nun ein 1.Angebot für die 3 Personen.",
+  "$.Resultat.KommInShop": "Komm in unseren Laden, damit wir das Angebot auf Eure persönlichen Anforderungen zuschneiden können.",
+  "$.Resultat.Oeffnungszeiten": "Wir sind von Mo - So, 10-20h in Uster für Dich.",
+  "$.Resultat.NochWas": "Können wir noch etwas für Dich tun?",
+  "Nein, bin happy": "Nein, bin happy",
+  "$.Resultat.BestenDank": "Besten Dank - wir freuen uns auf Deinen Besuch bei uns im Sports-Village.ch in Uster",
+  "Ja": "Ja",
+  "Snowboard": "Snowboard",
+  "Langlauf": "Langlauf",
+  "unsere Webseite": "unsere Webseite",
+  "29-34": "29-34",
+  "> 34": "> 34",
+  "12 - 18 Jahre": "12 - 18 Jahre",
+  "älter als 18 Jahre": "älter als 18 Jahre",
+  "final": ""
+}
