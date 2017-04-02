@@ -6,6 +6,7 @@ var builder = require('./core/');
 var restify = require('restify');
 var request = require('request');
 var sprintf = require('sprintf-js');
+const uuidV4 = require('uuid/v4');
 
 require('dotenv').config();
 var _ = require('lodash');
@@ -205,7 +206,7 @@ bot.dialog('/Ski/Angebot', [
             .title("$.Resultat.Titel", session.userData.angebot.personen.length)
             .text(angebotTitlePersonen(session.userData.angebot))
             .images([
-                 builder.CardImage.create(session, "http://www.doris-lorenz.ch/tabelle2.png")
+                 builder.CardImage.create(session, "http://www.doris-lorenz.ch/tabelle.png?uuid="+uuidV4())
             ]);
         var msg = new builder.Message(session).addAttachment(card);
         session.send(msg);
