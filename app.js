@@ -208,7 +208,7 @@ bot.dialog('/Ski/Angebot', [
             .images([
                  builder.CardImage.create(session, "http://www.doris-lorenz.ch/tabelle.png?uuid="+uuidV4())
             ]);
-        var msg = new builder.Message(session).addAttachment(card);
+        var msg = new builder.Message(session).addAttachment(card.toAttachment());
         session.send(msg);
         session.send("$.Resultat.KommInShop");
         session.endDialog();
