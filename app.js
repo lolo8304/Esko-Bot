@@ -254,8 +254,12 @@ bot.dialog('/Ski/PersonenEingaben', [
     session.beginDialog("/Ski/Person");
   },
   function (session, results, next) {
-    session.send ("$.Resultat.WarteRechnen", session.userData.angebot.personen.length)
-    session.endDialog();
+    if (results.response) {
+      session.send ("$.Resultat.WarteRechnen", session.userData.angebot.personen.length)
+      session.endDialog();
+    } else {
+      session.cancelDialog();
+    }
   }
 ]);
 
@@ -276,9 +280,13 @@ bot.dialog('/Ski/Person', [
     }
   },
   function (session, results, next) {
-    session.userData.angebot.personen.push(session.dialogData.person);
-    session.dialogData.person = null;
-    session.replaceDialog("/Ski/Person");
+    if (results.response) {
+      session.userData.angebot.personen.push(session.dialogData.person);
+      session.dialogData.person = null;
+      session.replaceDialog("/Ski/Person");
+    } else {
+      session.cancelDialog();
+    }
   }
 ]);
 
@@ -291,7 +299,7 @@ bot.dialog('/Ski/Piste', [
   function (session, results, next) {
     session.endDialog();
   }
-]);
+]).cancelAction('/Intro', "Ok... wir beginnen nochmals von vorn.", { matches: /(intro|help|start)/i });
 
 bot.dialog('/Ski/Erwachsener', [
   function (session, args, next) {
@@ -299,10 +307,14 @@ bot.dialog('/Ski/Erwachsener', [
     session.beginDialog("/Ski/Piste", args);
   },
   function (session, results, next) {
-    session.dialogData.person.piste = results.response.entity;
-    session.userData.angebot.todoCount.countErwachsene--;
-    session.userData.angebot.todoCount.countTotal--;
-    session.endDialog();
+    if (results.response) {
+      session.dialogData.person.piste = results.response.entity;
+      session.userData.angebot.todoCount.countErwachsene--;
+      session.userData.angebot.todoCount.countTotal--;
+      session.endDialog();
+    } else {
+      session.cancelDialog();
+    }
   }
 ]);
 
@@ -312,10 +324,14 @@ bot.dialog('/Ski/Kind', [
     session.beginDialog("/Ski/Piste", args);
   },
   function (session, results, next) {
-    session.dialogData.person.piste = results.response.entity;
-    session.userData.angebot.todoCount.countKinder--;
-    session.userData.angebot.todoCount.countTotal--;
-    session.endDialog();
+    if (results.response) {
+      session.dialogData.person.piste = results.response.entity;
+      session.userData.angebot.todoCount.countKinder--;
+      session.userData.angebot.todoCount.countTotal--;
+      session.endDialog();
+    } else {
+      session.cancelDialog();
+    }
   }
 ]);
 
@@ -325,10 +341,14 @@ bot.dialog('/Ski/Jugendlicher', [
     session.beginDialog("/Ski/Piste", args);
   },
   function (session, results, next) {
-    session.dialogData.person.piste = results.response.entity;
-    session.userData.angebot.todoCount.countJugendliche--;
-    session.userData.angebot.todoCount.countTotal--;
-    session.endDialog();
+    if (results.response) {
+      session.dialogData.person.piste = results.response.entity;
+      session.userData.angebot.todoCount.countJugendliche--;
+      session.userData.angebot.todoCount.countTotal--;
+      session.endDialog();
+    } else {
+      session.cancelDialog();
+    }
   }
 ]);
 
