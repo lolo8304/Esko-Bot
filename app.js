@@ -156,10 +156,13 @@ bot.dialog('/Intro', [
     }
   },
   function (session, results, next) {
-    session.send("$.Resultat.BestenDankDennoch");
+    if (results.response) {
+      session.send("$.Resultat.KommInShop");
+    } else {
+      session.send("$.Resultat.BestenDankDennoch");
+    }
     session.endDialog();
   }
-
 ]);
 
 bot.dialog('/Ski', [
@@ -187,14 +190,20 @@ bot.dialog('/Ski', [
 
 function angebotTitlePersonen(angebot) {
   var buf = "";
-  if (angebot.counts.countErwachsene > 0) {
+  if (angebot.counts.countErwachsene > 1) {
     buf += angebot.counts.countErwachsene+" Erwachsene ";
+  } else if (angebot.counts.countErwachsene == 1) {
+    buf += angebot.counts.countErwachsene+" Erwachsener ";
   }
-  if (angebot.counts.countKinder > 0) {
+  if (angebot.counts.countKinder > 1) {
     buf += angebot.counts.countKinder+" Kinder ";
+  } else if (angebot.counts.countKinder == 1) {
+    buf += angebot.counts.countKinder+" Kind ";
   }
-  if (angebot.counts.countJugendliche > 0) {
+  if (angebot.counts.countJugendliche > 1) {
    buf += angebot.counts.countJugendliche+" Jugendliche";
+  } else if (angebot.counts.countJugendliche == 1) {
+   buf += angebot.counts.countJugendliche+" Jugendlicher";
   }
   return buf;
 }
@@ -205,11 +214,10 @@ bot.dialog('/Ski/Angebot', [
             .title("$.Resultat.Titel", session.userData.angebot.personen.length)
             .text(angebotTitlePersonen(session.userData.angebot))
             .images([
-                builder.CardImage.create(session, "http://www.doris-lorenz.ch/tabelle.png?uuid="+uuidV4())
+                builder.CardImage.create(session, "http://www.doris-lorenz.ch/tabelle2.png?uuid="+uuidV4())
             ]);
         var msg = new builder.Message(session).addAttachment(card.toAttachment());
         session.send(msg);
-//        session.send("$.Resultat.KommInShop");
         session.endDialog();
   }
 ]);
