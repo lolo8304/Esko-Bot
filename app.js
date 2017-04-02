@@ -205,7 +205,7 @@ bot.dialog('/Ski/Angebot', [
             .title("$.Resultat.Titel", session.userData.angebot.personen.length)
             .text(angebotTitlePersonen(session.userData.angebot))
             .images([
-                 builder.CardImage.create(session, "http://www.doris-lorenz.ch/tabelle1.png")
+                 builder.CardImage.create(session, "http://www.doris-lorenz.ch/tabelle2.png")
             ]);
         var msg = new builder.Message(session).addAttachment(card);
         session.send(msg);
