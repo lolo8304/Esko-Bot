@@ -5,6 +5,7 @@
     "Mit 'start' kannst Du immer wieder von vorne beginnen."
   ],
   "$.Intro.Tschuess": "Tschüss - auf einer ander Mal. Dein Esko vom Sports-Village.ch",
+  "$.Ski.Abbruch" : "Ok... wir beginnen nochmals von vorn. Bitte mit **start** beginnen",
   "$.Ski.BestätigungPersonenFehler": "Leider konnte ich leider keine Zahlen erkennen. Versuch es nochmals.",
   "$.Ski.Tabelle.URL" : "https://s3.amazonaws.com/botsociety.prod.us/c4233475799177b663f03bf5e140dbc6a2ascreenshot%2020170331%20221454png.png",
 
