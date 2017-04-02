@@ -217,7 +217,7 @@ bot.dialog('/Ski/Angebot', [
             .title("$.Resultat.Titel", session.userData.angebot.personen.length)
             .text(angebotTitlePersonen(session.userData.angebot))
             .images([
-                 builder.CardImage.create(session, "https://www.naturkosmetik-appenzell.ch/wp-content/uploads/2017/04/tabelle2.png?uuid="+uuidV4())
+                 builder.CardImage.create(session, "http://www.naturkosmetik-appenzell.ch/wp-content/uploads/2017/04/tabelle2-e1491164175979.png?uuid="+uuidV4())
             ]);
         var msg = new builder.Message(session).addAttachment(card.toAttachment());
         session.send(msg);
