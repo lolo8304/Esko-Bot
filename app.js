@@ -136,8 +136,7 @@ bot.dialog('/Intro', [
             .title("Esko-Bot")
             .text("$.Intro.Willkommen")
             .images([
-                 builder.CardImage.create(session, "https://www.naturkosmetik-appenzell.ch/wp-content/uploads/2017/04/tabelle2.png?uuid="+uuidV4())
-//                 ,builder.CardImage.create(session, "https://bot-framework.azureedge.net/bot-icons-v1/Esko-Bot_AQV1EDC7d8QL9EC2WgFA64iy9uHF43619FMLCvC4vtE0uOo.png")
+                 ,builder.CardImage.create(session, "https://bot-framework.azureedge.net/bot-icons-v1/Esko-Bot_AQV1EDC7d8QL9EC2WgFA64iy9uHF43619FMLCvC4vtE0uOo.png")
             ]);
         var msg = new builder.Message(session).addAttachment(card);
         session.send(msg);
@@ -216,7 +215,7 @@ bot.dialog('/Ski/Angebot', [
             .title("$.Resultat.Titel", session.userData.angebot.personen.length)
             .text(angebotTitlePersonen(session.userData.angebot))
             .images([
-                builder.CardImage.create(session, "http://www.doris-lorenz.ch/tabelle2.png?uuid="+uuidV4())
+                 builder.CardImage.create(session, "https://www.naturkosmetik-appenzell.ch/wp-content/uploads/2017/04/tabelle2.png?uuid="+uuidV4())
             ]);
         var msg = new builder.Message(session).addAttachment(card.toAttachment());
         session.send(msg);
