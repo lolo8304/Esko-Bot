@@ -136,7 +136,7 @@ bot.dialog('/Intro', [
             .title("Esko-Bot")
             .text("$.Intro.Willkommen")
             .images([
-                 ,builder.CardImage.create(session, "https://bot-framework.azureedge.net/bot-icons-v1/Esko-Bot_AQV1EDC7d8QL9EC2WgFA64iy9uHF43619FMLCvC4vtE0uOo.png")
+                 builder.CardImage.create(session, "https://bot-framework.azureedge.net/bot-icons-v1/Esko-Bot_AQV1EDC7d8QL9EC2WgFA64iy9uHF43619FMLCvC4vtE0uOo.png")
             ]);
         var msg = new builder.Message(session).addAttachment(card);
         session.send(msg);
