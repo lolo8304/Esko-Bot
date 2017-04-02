@@ -137,7 +137,7 @@ bot.dialog('/Intro', [
             .images([
                  builder.CardImage.create(session, "https://bot-framework.azureedge.net/bot-icons-v1/Esko-Bot_AQV1EDC7d8QL9EC2WgFA64iy9uHF43619FMLCvC4vtE0uOo.png")
             ]);
-        var msg = new builder.Message(session).attachments([card]);
+        var msg = new builder.Message(session).addAttachment(card);
         session.send(msg);
         session.send("$.Intro.Willkommen");
         choices(session, "$.Intro.Auswahl", "$.Intro.Auswahl.Choices");
@@ -207,7 +207,7 @@ bot.dialog('/Ski/Angebot', [
             .images([
                  builder.CardImage.create(session, "https://s3.amazonaws.com/botsociety.prod.us/c4233475799177b663f03bf5e140dbc6a2ascreenshot%2020170331%20221454png.png")
             ]);
-        var msg = new builder.Message(session).attachments([card]);
+        var msg = new builder.Message(session).addAttachment(card);
         session.send(msg);
         session.send("$.Resultat.KommInShop");
         session.endDialog();
