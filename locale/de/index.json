@@ -15,7 +15,7 @@
   "$.Ski.Personen": "Für welche Personen benötigst Du eine Miete?\n\nBsp: 2 Kinder und 2 Erwachsene\n\n1 Kind, 2 Erwachsene",
   "$.Ski.BestätigungPersonen": "Ok - das bedeutet insgsamt %s Personen. Lass uns beginnen.",
   "$.Person.Start": "Beginnen wir mit dem 1.%s",
-  "$.Person.Piste": "Welche Piste fährt der %s am liebsten?",
+  "$.Person.Piste": "Welche Piste fährt %s am liebsten?",
   "blau": "blau",
   "$.Person.Weitere": "Nun zum nächsten %s",
   "rot": "rot",

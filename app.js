@@ -15,7 +15,7 @@ var moment = require('moment');
 function choices(session, text, choices, ...args) {
     var intro = sprintf.sprintf(session.localizer.gettext(session.preferredLocale(), text), args);
     var options = session.localizer.gettext(session.preferredLocale(), choices);
-    builder.Prompts.choice(session, intro, options);
+    builder.Prompts.choice(session, intro, options, {listStyle: builder.ListStyle["inline"]});
 }
 
 
@@ -134,13 +134,12 @@ bot.dialog('/Intro', [
         session.preferredLocale("de");
         var card = new builder.HeroCard(session)
             .title("Esko-Bot")
-            .text("... vom Sports-Village.ch.")
+            .text("$.Intro.Willkommen")
             .images([
                  builder.CardImage.create(session, "https://bot-framework.azureedge.net/bot-icons-v1/Esko-Bot_AQV1EDC7d8QL9EC2WgFA64iy9uHF43619FMLCvC4vtE0uOo.png")
             ]);
         var msg = new builder.Message(session).addAttachment(card);
         session.send(msg);
-        session.send("$.Intro.Willkommen");
         choices(session, "$.Intro.Auswahl", "$.Intro.Auswahl.Choices");
   },
   function (session, results, next) {
@@ -206,12 +205,11 @@ bot.dialog('/Ski/Angebot', [
             .title("$.Resultat.Titel", session.userData.angebot.personen.length)
             .text(angebotTitlePersonen(session.userData.angebot))
             .images([
-builder.CardImage.create(session, "https://bot-framework.azureedge.net/bot-icons-v1/Esko-Bot_AQV1EDC7d8QL9EC2WgFA64iy9uHF43619FMLCvC4vtE0uOo.png"),
-                 builder.CardImage.create(session, "https://www.doris-lorenz.ch/tabelle.png?uuid="+uuidV4())
+                builder.CardImage.create(session, "http://www.doris-lorenz.ch/tabelle.png?uuid="+uuidV4())
             ]);
         var msg = new builder.Message(session).addAttachment(card.toAttachment());
         session.send(msg);
-        session.send("$.Resultat.KommInShop");
+//        session.send("$.Resultat.KommInShop");
         session.endDialog();
   }
 ]);
@@ -223,7 +221,8 @@ function getNextPerson(angebot) {
     if (todo.countErwachsene > 0) {
       return { 
         type: "Erwachsener", 
-        typeWithArtikel: "der Erwachsene", 
+        typeWithArtikel1: "der erste Erwachsene", 
+        typeWithArtikelN: "der nächste Erwachsene", 
         typeMultiple: "Erwachsene",
         indent: "/Ski/Erwachsener",
         index: angebot.counts.countErwachsene - todo.countErwachsene
@@ -231,7 +230,8 @@ function getNextPerson(angebot) {
     } else if (todo.countJugendliche > 0) {
       return { 
         type: "Jugendlicher", 
-        typeWithArtikel: "der Jugendliche", 
+        typeWithArtikel1: "der erste Jugendliche", 
+        typeWithArtikelN: "der nächste Jugendliche", 
         typeMultiple: "Jugendliche",
         indent: "/Ski/Jugendlicher",
         index: angebot.counts.countJugendliche - todo.countJugendliche
@@ -239,7 +239,8 @@ function getNextPerson(angebot) {
     } else {
       return { 
         type: "Kind", 
-        typeWithArtikel: "das Kind", 
+        typeWithArtikel1: "das erste Kind", 
+        typeWithArtikelN: "das nächste Kind", 
         typeMultiple: "Kinder",
         indent: "/Ski/Kind",
         index: angebot.counts.countKinder - todo.countKinder
@@ -257,7 +258,7 @@ bot.dialog('/Ski/PersonenEingaben', [
   },
   function (session, results, next) {
     if (results.response) {
-      session.send ("$.Resultat.WarteRechnen", session.userData.angebot.personen.length)
+      //session.send ("$.Resultat.WarteRechnen", session.userData.angebot.personen.length)
       session.endDialog();
     } else {
       session.cancelDialog();
@@ -272,9 +273,9 @@ bot.dialog('/Ski/Person', [
     session.dialogData.person = nextPerson;
     if (nextPerson) {
       if (nextPerson.index == 0) {
-        session.send("$.Person.Start", nextPerson.type)
+        //session.send("$.Person.Start", nextPerson.type)
       } else {
-        session.send("$.Person.Weitere", nextPerson.type)
+        //session.send("$.Person.Weitere", nextPerson.type)
       }
       session.beginDialog(nextPerson.indent, nextPerson);
     } else {
@@ -296,7 +297,11 @@ bot.dialog('/Ski/Person', [
 bot.dialog('/Ski/Piste', [
   function (session, args, next) {
     session.dialogData.person = args;
-    choices(session, "$.Person.Piste", "$.Person.Piste.Choices", args.typeMultiple);
+    if (args.index == 0) {
+      choices(session, "$.Person.Piste", "$.Person.Piste.Choices", args.typeWithArtikel1);
+    } else {
+      choices(session, "$.Person.Piste", "$.Person.Piste.Choices", args.typeWithArtikelN);
+    }
   },
   function (session, results, next) {
     session.endDialog();
