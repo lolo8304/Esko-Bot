@@ -16,6 +16,7 @@
             ],
             "fromUser": false,
             "dialog": "Intro",
+            "choicesText": "$.Intro.Auswahl.Choices",
             "answer": [
                 {
                     "text": "Ski",
@@ -53,6 +54,7 @@
                             ],
                             "fromUser": false,
                             "dialog": "Person",
+                            "choicesText": "$.Person.Piste.Choices",
                             "answer": [
                                 {
                                     "text": "blau",
@@ -72,6 +74,7 @@
                                                 "schwarz"
                                             ],
                                             "fromUser": false,
+                                            "choicesText": "Welche Piste fährt der Erwachsene am liebsten?.Choices",
                                             "answer": [
                                                 {
                                                     "text": "blau",
@@ -99,6 +102,7 @@
                                                             ],
                                                             "fromUser": false,
                                                             "dialog": "Person",
+                                                            "choicesText": "$.Person.KindAlter.Choices",
                                                             "answer": [
                                                                 {
                                                                     "text": "unter 12 Jahren",
@@ -113,6 +117,7 @@
                                                                             ],
                                                                             "fromUser": false,
                                                                             "dialog": "Person",
+                                                                            "choicesText": "$.Person.KindSchuh.Choices",
                                                                             "answer": [
                                                                                 {
                                                                                     "text": "25-28",
@@ -126,6 +131,7 @@
                                                                                                 "schwarz"
                                                                                             ],
                                                                                             "fromUser": false,
+                                                                                            "choicesText": "Welche Piste fährt das Kind oder Jugendlicher am liebsten?.Choices",
                                                                                             "answer": [
                                                                                                 {
                                                                                                     "text": "blau",
@@ -164,6 +170,7 @@
                                                                                                             ],
                                                                                                             "fromUser": false,
                                                                                                             "dialog": "Resultat",
+                                                                                                            "choicesText": "$.Resultat.NochWas.Choices",
                                                                                                             "answer": [
                                                                                                                 {
                                                                                                                     "text": "Nein, bin happy",
@@ -188,6 +195,7 @@
                                                                                                                                 "unsere Webseite"
                                                                                                                             ],
                                                                                                                             "fromUser": false,
+                                                                                                                            "choicesText": "In welchem Bereich können wir Dir helfen?.Choices",
                                                                                                                             "answer": [
                                                                                                                                 {
                                                                                                                                     "text": "Snowboard",
@@ -233,6 +241,7 @@
                                                                                                 "schwarz"
                                                                                             ],
                                                                                             "fromUser": false,
+                                                                                            "choicesText": "Welche Piste fährt das Kind?.Choices",
                                                                                             "answer": [
                                                                                                 {
                                                                                                     "text": "blau",
@@ -267,6 +276,7 @@
                                                                                                                 "Ja"
                                                                                                             ],
                                                                                                             "fromUser": false,
+                                                                                                            "choicesText": "Können wir noch etwas für Dich tun?.Choices",
                                                                                                             "answer": [
                                                                                                                 {
                                                                                                                     "text": "Nein, bin happy",
@@ -290,6 +300,7 @@
                                                                                                                                 "unsere Webseite"
                                                                                                                             ],
                                                                                                                             "fromUser": false,
+                                                                                                                            "choicesText": "In welchem Bereich können wir Dir helfen?.Choices",
                                                                                                                             "answer": [
                                                                                                                                 {
                                                                                                                                     "text": "Snowboard",
@@ -335,6 +346,7 @@
                                                                                                 "schwarz"
                                                                                             ],
                                                                                             "fromUser": false,
+                                                                                            "choicesText": "Welche Piste fährt das Kind?.Choices",
                                                                                             "answer": [
                                                                                                 {
                                                                                                     "text": "blau",
@@ -369,6 +381,7 @@
                                                                                                                 "Ja"
                                                                                                             ],
                                                                                                             "fromUser": false,
+                                                                                                            "choicesText": "Können wir noch etwas für Dich tun?.Choices",
                                                                                                             "answer": [
                                                                                                                 {
                                                                                                                     "text": "Nein, bin happy",
@@ -392,6 +405,7 @@
                                                                                                                                 "unsere Webseite"
                                                                                                                             ],
                                                                                                                             "fromUser": false,
+                                                                                                                            "choicesText": "In welchem Bereich können wir Dir helfen?.Choices",
                                                                                                                             "answer": [
                                                                                                                                 {
                                                                                                                                     "text": "Snowboard",
@@ -462,8 +476,9 @@
                     "then": [
                         {
                             "type": "text",
-                            "text": "Für Langlauf besuche uns in unseren Laden, damit wir das Angebot auf Eure persönlichen Anforderungen zuschneiden können.",
-                            "fromUser": false
+                            "text": "$.Langlauf.Fehler",
+                            "fromUser": false,
+                            "dialog": "Langlauf"
                         }
                     ]
                 },
@@ -472,242 +487,13 @@
                     "then": [
                         {
                             "type": "text",
-                            "text": "Für Snowboard besuche uns in unseren Laden, damit wir das Angebot auf Eure persönlichen Anforderungen zuschneiden können.",
-                            "fromUser": false
+                            "text": "$.Snowboard.Fehler",
+                            "fromUser": false,
+                            "dialog": "Snowboard"
                         }
                     ]
                 }
             ]
         }
-    ],
-    "labels": [
-        {
-            "key": "$.Intro.Willkommen",
-            "text": "Willkommen beim Sports-Village.ch Bot.\nMein Name ist Esko und ich helfen Dir bei der Auswahl der richtigen Wintersport Ausrüstung"
-        },
-        {
-            "key": "$.Intro.Auswahl",
-            "text": "Wählen Sie unter folgenden Angeboten aus"
-        },
-        {
-            "key": "Ski",
-            "text": "Ski"
-        },
-        {
-            "key": "$.Ski.Personen",
-            "text": "Für welche Personen benötigst Du eine Miete?\n\nBsp: 2 Kinder und 2 Erwachsene\n1 Kind, 2 Erwachsene"
-        },
-        {
-            "key": "$.Ski.BestätigungPersonen",
-            "text": "Ok - das bedeutet insgsamt 3 Personen. Lass uns beginnen."
-        },
-        {
-            "key": "$.Person.Start",
-            "text": "Beginnen wir mit dem 1.Erwachsenen"
-        },
-        {
-            "key": "$.Person.Piste",
-            "text": "Welche Piste fährt der Erwachsene am liebsten?"
-        },
-        {
-            "key": "blau",
-            "text": "blau"
-        },
-        {
-            "key": "$.Person.Weitere",
-            "text": "Nun zum 2.Erwachsenen"
-        },
-        {
-            "key": "blau",
-            "text": "blau"
-        },
-        {
-            "key": "rot",
-            "text": "rot"
-        },
-        {
-            "key": "schwarz",
-            "text": "schwarz"
-        },
-        {
-            "key": "$.Person.KindAlter",
-            "text": "Wie alt ist Dein Kind oder Jugendlicher?"
-        },
-        {
-            "key": "unter 12 Jahren",
-            "text": "unter 12 Jahren"
-        },
-        {
-            "key": "$.Person.KindSchuh",
-            "text": "Welche Schuhgrösse hat Dein Kind?"
-        },
-        {
-            "key": "25-28",
-            "text": "25-28"
-        },
-        {
-            "key": "blau",
-            "text": "blau"
-        },
-        {
-            "key": "$.Resultat.Titel",
-            "text": "Danke. Ich rechne für Dich nun ein 1.Angebot für die 3 Personen."
-        },
-        {
-            "key": "$.Resultat.KommInShop",
-            "text": "Komm in unseren Laden, damit wir das Angebot auf Eure persönlichen Anforderungen zuschneiden können."
-        },
-        {
-            "key": "$.Resultat.Oeffnungszeiten",
-            "text": "Wir sind von Mo - So, 10-20h in Uster für Dich."
-        },
-        {
-            "key": "$.Resultat.NochWas",
-            "text": "Können wir noch etwas für Dich tun?"
-        },
-        {
-            "key": "Nein, bin happy",
-            "text": "Nein, bin happy"
-        },
-        {
-            "key": "$.Resultat.BestenDank",
-            "text": "Besten Dank - wir freuen uns auf Deinen Besuch bei uns im Sports-Village.ch in Uster"
-        },
-        {
-            "key": "Ja",
-            "text": "Ja"
-        },
-        {
-            "key": "Snowboard",
-            "text": "Snowboard"
-        },
-        {
-            "key": "Langlauf",
-            "text": "Langlauf"
-        },
-        {
-            "key": "unsere Webseite",
-            "text": "unsere Webseite"
-        },
-        {
-            "key": "rot",
-            "text": "rot"
-        },
-        {
-            "key": "schwarz",
-            "text": "schwarz"
-        },
-        {
-            "key": "29-34",
-            "text": "29-34"
-        },
-        {
-            "key": "blau",
-            "text": "blau"
-        },
-        {
-            "key": "Nein, bin happy",
-            "text": "Nein, bin happy"
-        },
-        {
-            "key": "Ja",
-            "text": "Ja"
-        },
-        {
-            "key": "Snowboard",
-            "text": "Snowboard"
-        },
-        {
-            "key": "Langlauf",
-            "text": "Langlauf"
-        },
-        {
-            "key": "unsere Webseite",
-            "text": "unsere Webseite"
-        },
-        {
-            "key": "rot",
-            "text": "rot"
-        },
-        {
-            "key": "schwarz",
-            "text": "schwarz"
-        },
-        {
-            "key": "> 34",
-            "text": "> 34"
-        },
-        {
-            "key": "blau",
-            "text": "blau"
-        },
-        {
-            "key": "Nein, bin happy",
-            "text": "Nein, bin happy"
-        },
-        {
-            "key": "Ja",
-            "text": "Ja"
-        },
-        {
-            "key": "Snowboard",
-            "text": "Snowboard"
-        },
-        {
-            "key": "Langlauf",
-            "text": "Langlauf"
-        },
-        {
-            "key": "unsere Webseite",
-            "text": "unsere Webseite"
-        },
-        {
-            "key": "rot",
-            "text": "rot"
-        },
-        {
-            "key": "schwarz",
-            "text": "schwarz"
-        },
-        {
-            "key": "12 - 18 Jahre",
-            "text": "12 - 18 Jahre"
-        },
-        {
-            "key": "älter als 18 Jahre",
-            "text": "älter als 18 Jahre"
-        },
-        {
-            "key": "rot",
-            "text": "rot"
-        },
-        {
-            "key": "schwarz",
-            "text": "schwarz"
-        },
-        {
-            "key": "Langlauf",
-            "text": "Langlauf"
-        },
-        {
-            "key": "Snowboard",
-            "text": "Snowboard"
-        }
-    ],
-    "dialogs": [
-        "Intro",
-        "Intro",
-        "Ski",
-        "Ski",
-        "Person",
-        "Person",
-        "Person",
-        "Person",
-        "Person",
-        "Resultat",
-        "Resultat",
-        "Resultat",
-        "Resultat",
-        "Resultat"
     ]
 }

@@ -5,9 +5,17 @@ A simple echo bot for the Microsoft Bot Framework.
 var builder = require('./core/');
 var restify = require('restify');
 var request = require('request');
+var sprintf = require('sprintf-js');
+
 require('dotenv').config();
 var _ = require('lodash');
 var moment = require('moment');
+
+function choices(session, text, choices, ...args) {
+    var intro = sprintf.sprintf(session.localizer.gettext(session.preferredLocale(), text), args);
+    var options = session.localizer.gettext(session.preferredLocale(), choices);
+    builder.Prompts.choice(session, intro, options);
+}
 
 
 // Setup Restify Server
@@ -103,8 +111,12 @@ bot.on('deleteUserData', function (message) {
 // Add global LUIS recognizer to bot
 var model = process.env.MICROSOFT_LUIS_MODEL;
 var recognizer = new builder.LuisRecognizer(model);
-var dialog = new builder.IntentDialog({ recognizers: [recognizer] });
-bot.dialog('/', dialog);
+var intents = new builder.IntentDialog({ recognizers: [recognizer] });
+bot.dialog('/', intents
+    .matches('help', '/Hilfe')
+    .matches('intro', '/Intro')
+    .matches('personen', '/Personen')
+);
 
 
 //=========================================================
@@ -112,12 +124,11 @@ bot.dialog('/', dialog);
 //=========================================================
 
 
-dialog.onDefault(
+intents.onDefault(
  builder.DialogAction.send("$.Intro.Fehler")
 );
 
-
-dialog.matches('intro', [
+bot.dialog('/Intro', [
   function (session, args, next) {
         session.preferredLocale("de");
         var card = new builder.HeroCard(session)
@@ -129,15 +140,246 @@ dialog.matches('intro', [
         var msg = new builder.Message(session).attachments([card]);
         session.send(msg);
         session.send("$.Intro.Willkommen");
-        var options = session.localizer.gettext(session.preferredLocale(), "$.Intro.Auswahl.Optionen");
-        builder.Prompts.choice(session, "$.Intro.Auswahl", options)
+        choices(session, "$.Intro.Auswahl", "$.Intro.Auswahl.Choices");
   },
-  function (session, results) {
+  function (session, results, next) {
+    if (results.response.entity === "Ski") {
+      session.beginDialog("/Ski");
+    }
+    if (results.response.entity === "Langlauf") {
+      session.send("$.Langlauf.Fehler");
+      next()
+    }
+    if (results.response.entity === "Snowboard") {
+      session.send("$.Snowboard.Fehler");
+      next()
+    }
+  },
+  function (session, results, next) {
+    session.send("$.Resultat.BestenDankDennoch");
+    session.endDialog();
   }
 
 ]);
 
-dialog.matches('risk', [
+bot.dialog('/Ski', [
+  function (session, args, next) {
+    session.beginDialog("/Ski/PersonenAuswahl")
+  },
+  function (session, results, next) {
+    if (results.countTotal > 0) {
+      session.userData.angebot = {
+        type: "ski",
+        counts: results,
+        todoCount: JSON.parse(JSON.stringify(results)),
+        personen: []
+      }
+      session.beginDialog("/Ski/PersonenEingaben")
+    } else {
+      session.endDialog();
+    }
+  },
+  function (session, results, next) {
+    session.beginDialog("/Ski/Angebot")
+  }
+]);
+
+
+function angebotTitlePersonen(angebot) {
+  var buf = "";
+  if (angebot.counts.countErwachsene > 0) {
+    buf += angebot.counts.countErwachsene+" Erwachsene ";
+  }
+  if (angebot.counts.countKinder > 0) {
+    buf += angebot.counts.countKinder+" Kinder ";
+  }
+  if (angebot.counts.countJugendliche > 0) {
+   buf += angebot.counts.countJugendliche+" Jugendliche";
+  }
+  return buf;
+}
+
+bot.dialog('/Ski/Angebot', [
+  function (session, args, next) {
+        var card = new builder.HeroCard(session)
+            .title("$.Resultat.Titel", session.userData.angebot.personen.length)
+            .text(angebotTitlePersonen(session.userData.angebot))
+            .images([
+                 builder.CardImage.create(session, "https://s3.amazonaws.com/botsociety.prod.us/c4233475799177b663f03bf5e140dbc6a2ascreenshot%2020170331%20221454png.png")
+            ]);
+        var msg = new builder.Message(session).attachments([card]);
+        session.send(msg);
+        session.send("$.Resultat.KommInShop");
+        session.endDialog();
+  }
+]);
+
+
+function getNextPerson(angebot) {
+  var todo = angebot.todoCount;
+  if (todo.countTotal > 0) {
+    if (todo.countErwachsene > 0) {
+      return { 
+        type: "Erwachsener", 
+        typeWithArtikel: "der Erwachsene", 
+        typeMultiple: "Erwachsene",
+        indent: "/Ski/Erwachsener",
+        index: angebot.counts.countErwachsene - todo.countErwachsene
+      }
+    } else if (todo.countJugendliche > 0) {
+      return { 
+        type: "Jugendlicher", 
+        typeWithArtikel: "der Jugendliche", 
+        typeMultiple: "Jugendliche",
+        indent: "/Ski/Jugendlicher",
+        index: angebot.counts.countJugendliche - todo.countJugendliche
+      }
+    } else {
+      return { 
+        type: "Kind", 
+        typeWithArtikel: "das Kind", 
+        typeMultiple: "Kinder",
+        indent: "/Ski/Kind",
+        index: angebot.counts.countKinder - todo.countKinder
+      }
+    }
+  } else {
+    return null;
+  }
+}
+
+bot.dialog('/Ski/PersonenEingaben', [
+  function (session, args, next) {
+    session.send("$.Ski.BestätigungPersonen", session.userData.angebot.counts.countTotal);
+    session.beginDialog("/Ski/Person");
+  },
+  function (session, results, next) {
+    session.send ("$.Resultat.WarteRechnen", session.userData.angebot.personen.length)
+    session.endDialog();
+  }
+]);
+
+
+bot.dialog('/Ski/Person', [
+  function (session, args, next) {
+    var nextPerson = getNextPerson(session.userData.angebot);
+    session.dialogData.person = nextPerson;
+    if (nextPerson) {
+      if (nextPerson.index == 0) {
+        session.send("$.Person.Start", nextPerson.type)
+      } else {
+        session.send("$.Person.Weitere", nextPerson.type)
+      }
+      session.beginDialog(nextPerson.indent, nextPerson);
+    } else {
+      session.endDialog();
+    }
+  },
+  function (session, results, next) {
+    session.userData.angebot.personen.push(session.dialogData.person);
+    session.dialogData.person = null;
+    session.replaceDialog("/Ski/Person");
+  }
+]);
+
+
+bot.dialog('/Ski/Piste', [
+  function (session, args, next) {
+    session.dialogData.person = args;
+    choices(session, "$.Person.Piste", "$.Person.Piste.Choices", args.typeMultiple);
+  },
+  function (session, results, next) {
+    session.endDialog();
+  }
+]);
+
+bot.dialog('/Ski/Erwachsener', [
+  function (session, args, next) {
+    session.dialogData.person = args;
+    session.beginDialog("/Ski/Piste", args);
+  },
+  function (session, results, next) {
+    session.dialogData.person.piste = results.response.entity;
+    session.userData.angebot.todoCount.countErwachsene--;
+    session.userData.angebot.todoCount.countTotal--;
+    session.endDialog();
+  }
+]);
+
+bot.dialog('/Ski/Kind', [
+  function (session, args, next) {
+    session.dialogData.person = args;
+    session.beginDialog("/Ski/Piste", args);
+  },
+  function (session, results, next) {
+    session.dialogData.person.piste = results.response.entity;
+    session.userData.angebot.todoCount.countKinder--;
+    session.userData.angebot.todoCount.countTotal--;
+    session.endDialog();
+  }
+]);
+
+bot.dialog('/Ski/Jugendlicher', [
+  function (session, args, next) {
+    session.dialogData.person = args;
+    session.beginDialog("/Ski/Piste", args);
+  },
+  function (session, results, next) {
+    session.dialogData.person.piste = results.response.entity;
+    session.userData.angebot.todoCount.countJugendliche--;
+    session.userData.angebot.todoCount.countTotal--;
+    session.endDialog();
+  }
+]);
+
+function findPrefixNumberOfEntity(entities, entityName) {
+  const entity = (builder.EntityRecognizer.findEntity(entities || [], entityName) || {});
+  const numberEntities = (builder.EntityRecognizer.findAllEntities(entities || [], ENTITIES.NUMBER) || {});
+  var minIndex = 1000000000;
+  var minNumber = 0;
+  if (entity) {
+    for (var i = 0; i < numberEntities.length; ++i) {
+      var numberEntity = numberEntities[i];
+      var diffIndex = entity.startIndex - numberEntity.endIndex;
+      if (diffIndex >= 0) {
+        if (diffIndex < minIndex) {
+          minNumber = parseInt(numberEntity.entity);
+        } 
+      }
+    }
+  }
+  return minNumber; 
+}
+
+bot.dialog('/Ski/PersonenAuswahl', [
+  function (session, args, next) {
+    builder.Prompts.text(session,"$.Ski.Personen");
+  },
+  function (session, results) {
+    recognizer.recognize({ message: { text: results.response }, locale: session.defaultLocale }, (err, args) => {
+      if (!err) {
+        const countErwachsene = findPrefixNumberOfEntity(args.entities, ENTITIES.ERWACHSENER);
+        const countKinder = findPrefixNumberOfEntity(args.entities, ENTITIES.KINDER);
+        const countJugendliche = findPrefixNumberOfEntity(args.entities, ENTITIES.JUGENDLICHE);
+        const countTotal = countErwachsene+countKinder+countJugendliche;
+        if (countTotal > 0) {
+          session.endDialogWithResult(
+            {countTotal: countTotal, countErwachsene: countErwachsene, countKinder: countKinder, countJugendliche : countJugendliche }
+          )
+        } else {
+          session.send("$.Ski.BestätigungPersonenFehler");
+          session.replaceDialog('/Ski/PersonenAuswahl')          
+        }
+      } else {
+        session.send("$.Ski.BestätigungPersonenFehler");
+        session.replaceDialog('/Ski/PersonenAuswahl')
+      }
+    });
+  }
+]);
+
+
+bot.dialog('risk', [
   function (session, args, next) {
     const countries = _.map(builder.EntityRecognizer.findAllEntities(args.entities || [], ENTITIES.COUNTRY) || [], 'entity');
     const customer = (builder.EntityRecognizer.findEntity(args.entities || [], ENTITIES.CUSTOMER) || {}).entity;
