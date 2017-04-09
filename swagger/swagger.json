@@ -1,0 +1,361 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "0.9.2",
+        "title": "Esko-Bot-API to get Mietpreise",
+        "description": "test test\n"
+    },
+    "host": "localhost:3978",
+    "basePath": "/model",
+    "definitions": {
+        "PreisResultListe": {
+            "description": "result of Skis search used for paging",
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/Preise"
+                },
+                "links": {
+                    "$ref": "#/definitions/Link"
+                }
+            }
+        },
+        "Preise": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/Preis"
+            }
+        },
+        "Preis": {
+            "description": "tbd",
+            "type": "object",
+            "properties": {
+                "_id": {
+                    "description": "tbd",
+                    "type": "number",
+                    "format": "integer"
+                },
+                "art": {
+                    "description": "tbd",
+                    "type": "string"
+                },
+                "typ": {
+                    "description": "tbd",
+                    "type": "string"
+                },
+                "alter": {
+                    "description": "tbd",
+                    "type": "string"
+                },
+                "farbe": {
+                    "description": "tbd",
+                    "type": "string"
+                },
+                "kategorie": {
+                    "description": "tbd",
+                    "type": "string"
+                },
+                "tage_1": {
+                    "description": "tbd",
+                    "type": "number",
+                    "format": "integer"
+                },
+                "tage_2": {
+                    "description": "tbd",
+                    "type": "number",
+                    "format": "integer"
+                },
+                "tage_7": {
+                    "description": "tbd",
+                    "type": "number",
+                    "format": "integer"
+                },
+                "tage_14": {
+                    "description": "tbd",
+                    "type": "number",
+                    "format": "integer"
+                },
+                "tage_100": {
+                    "description": "tbd",
+                    "type": "number",
+                    "format": "integer"
+                },
+                "tage_100_ab1": {
+                    "description": "tbd",
+                    "type": "string"
+                }
+            }
+        },
+        "Link": {
+            "title": "navigation links of result lists",
+            "properties": {
+                "cur": {
+                    "type": "string",
+                    "description": "URL of the current page request. including needed skip + limit parameters"
+                },
+                "first": {
+                    "type": "string",
+                    "description": "URL for first paging call"
+                },
+                "prev": {
+                    "type": "string",
+                    "description": "URL for prev paging call. Can be null if no prev possible, because already on first page"
+                },
+                "next": {
+                    "type": "string",
+                    "description": "URL for next paging call. Can be null if no next possible, because already on last page"
+                },
+                "last": {
+                    "type": "string",
+                    "description": "URL for last paging call"
+                },
+                "count": {
+                    "type": "number",
+                    "format": "integer",
+                    "description": "nof of results in this page. Always <= limit"
+                },
+                "totalCount": {
+                    "type": "number",
+                    "format": "integer",
+                    "description": "total count of results for query"
+                }
+            }
+        }
+    },
+    "paths": {
+        "/skis": {
+            "get": {
+                "summary": "list of all skis, use ranges",
+                "description": "get all ski using. max limit 25, using skip + limit to range\n",
+                "tags": [
+                    "Ski"
+                ],
+                "parameters": [
+                    {
+                        "name": "skip",
+                        "in": "query",
+                        "description": "nof items skipped in result. Default = 0. Used with limit for paging",
+                        "required": false,
+                        "type": "integer",
+                        "format": "integer"
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "limit no of responses. Default = 10. Used with skip for paging",
+                        "required": false,
+                        "type": "integer",
+                        "format": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "schema": {
+                            "$ref": "#/definitions/PreisResultListe"
+                        }
+                    }
+                }
+            }
+        },
+        "/skis/search/byWord/{text}": {
+            "get": {
+                "summary": "search skis by any word in all indexed fields, use ranges",
+                "description": "search all skis by any word in all indexed fields using full text search. Splitted words with blanks used as OR operator. using max limit 25, using skip + limit to range\n",
+                "parameters": [
+                    {
+                        "name": "text",
+                        "in": "path",
+                        "description": "word to search",
+                        "required": true,
+                        "type": "string",
+                        "format": "string"
+                    },
+                    {
+                        "name": "skip",
+                        "in": "query",
+                        "description": "nof items skipped in result. Default = 0. Used with limit for paging",
+                        "required": false,
+                        "type": "integer",
+                        "format": "integer"
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "limit no of responses. Default = 10. Used with skip for paging",
+                        "required": false,
+                        "type": "integer",
+                        "format": "integer"
+                    }
+                ],
+                "tags": [
+                    "Ski"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "schema": {
+                            "$ref": "#/definitions/PreisResultListe"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid text parameter"
+                    },
+                    "500": {
+                        "description": "technical server error"
+                    }
+                }
+            }
+        },
+        "/skis/search/byQuery/{query}/{sort}/{filter}": {
+            "get": {
+                "summary": "search skis using mongodb query, use ranges",
+                "description": "search all skis using a mongodb query in JSON format - see http://bit.ly/2aI9Djk, using. max limit 25, using skip + limit to range\n",
+                "parameters": [
+                    {
+                        "name": "query",
+                        "in": "path",
+                        "description": "mongodb query in JSON format - see http://bit.ly/2aI9Djk",
+                        "required": true,
+                        "default": "{ \"alter\" : \"kind\" }",
+                        "type": "string",
+                        "format": "string"
+                    },
+                    {
+                        "name": "sort",
+                        "in": "path",
+                        "description": "sort column in JSON format, use id as default - see http://bit.ly/2aIaK2I",
+                        "required": true,
+                        "default": "{\"id\" : 1}",
+                        "type": "string",
+                        "format": "string"
+                    },
+                    {
+                        "name": "filter",
+                        "in": "path",
+                        "description": "filter columns in JSON format, use {} as default - see http://bit.ly/2aEfTdB",
+                        "required": true,
+                        "default": "{}",
+                        "type": "string",
+                        "format": "string"
+                    },
+                    {
+                        "name": "skip",
+                        "in": "query",
+                        "description": "nof items skipped in result. Default = 0. Used with limit for paging",
+                        "required": false,
+                        "type": "integer",
+                        "format": "integer"
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "limit no of responses. Default = 10. Used with skip for paging",
+                        "required": false,
+                        "type": "integer",
+                        "format": "integer"
+                    }
+                ],
+                "tags": [
+                    "Ski"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "schema": {
+                            "$ref": "#/definitions/PreisResultListe"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid query parameter"
+                    },
+                    "500": {
+                        "description": "technical server error"
+                    }
+                }
+            }
+        },
+        "/skis/{id}": {
+            "get": {
+                "summary": "get ski with id",
+                "description": "get all attributes of a ski based on id\n",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "id of ski",
+                        "required": true,
+                        "type": "string",
+                        "format": "integer"
+                    }
+                ],
+                "tags": [
+                    "Ski"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "schema": {
+                            "$ref": "#/definitions/Preis"
+                        }
+                    },
+                    "404": {
+                        "description": "ski not found"
+                    },
+                    "500": {
+                        "description": "technical server error"
+                    }
+                }
+            }
+        },
+        "/skis/{typ}/{alter}/{farbe}": {
+            "get": {
+                "summary": "get ski with typ, alter and farbe",
+                "description": "get all attributes of a ski based on id\n",
+                "parameters": [
+                    {
+                        "name": "typ",
+                        "in": "path",
+                        "description": "id of ski",
+                        "required": true,
+                        "type": "string",
+                        "format": "string"
+                    },
+                    {
+                        "name": "alter",
+                        "in": "path",
+                        "description": "id of ski",
+                        "required": true,
+                        "type": "string",
+                        "format": "string"
+                    },
+                    {
+                        "name": "farbe",
+                        "in": "path",
+                        "description": "id of ski",
+                        "required": true,
+                        "type": "string",
+                        "format": "string"
+                    }
+                ],
+                "tags": [
+                    "Ski"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "schema": {
+                            "$ref": "#/definitions/Preis"
+                        }
+                    },
+                    "404": {
+                        "description": "ski not found"
+                    },
+                    "500": {
+                        "description": "technical server error"
+                    }
+                }
+            }
+        }
+    }
+}

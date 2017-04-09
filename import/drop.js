@@ -1,0 +1,1 @@
+db.skis.drop();
