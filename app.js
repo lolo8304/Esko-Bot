@@ -186,6 +186,16 @@ server.get('/swagger.local.json', function (req, res, next) {
   res.setHeader('content-type', 'application/json');
   res.send(200, JSON.parse(contents));
 });
+server.get('/swagger.yaml', function (req, res, next) {
+  var contents = fs.readFileSync('./swagger/swagger.yaml', 'utf8');
+  res.setHeader('content-type', 'text/yaml');
+  res.send(200, contents);
+});
+server.get('/swagger.json', function (req, res, next) {
+  var contents = fs.readFileSync('./swagger/swagger.json', 'utf8');
+  res.setHeader('content-type', 'application/json');
+  res.send(200, JSON.parse(contents));
+});
 
 var querystring = require('querystring');
 var url = require('url');
