@@ -5,8 +5,8 @@ info:
   description: |
     test test
 
-#host: localhost:3978
 host: localhost:3978
+#host: localhost:3978
 
 basePath: /model
 

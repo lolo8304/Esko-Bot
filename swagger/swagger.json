@@ -5,7 +5,7 @@
         "title": "Esko-Bot-API to get Mietpreise",
         "description": "test test\n"
     },
-    "host": "localhost:3978",
+    "host": "esko-bot.herokuapp.com",
     "basePath": "/model",
     "definitions": {
         "PreisResultListe": {

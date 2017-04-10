@@ -5,8 +5,8 @@ info:
   description: |
     test test
 
-#host: esko-bot.herokuapp.com
-host: localhost:3978
+host: esko-bot.herokuapp.com
+#host: localhost:3978
 
 basePath: /model
 
