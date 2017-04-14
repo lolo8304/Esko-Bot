@@ -260,19 +260,17 @@ function isInteger(obj) {
 
 function fullUrl(req, dictionary) {
     var path = req.server.url + req.url;
-    var query = "";
-    var index = path.indexOf('?');
-    if (index >= 0) {
-        query = path.substr(index+1);
-        path = path.substr(0, index);
-    }
-    var queryParams = querystring.parse(query);
+    var u = url.parse(path, true);
+    u.href = u.href.replace(u.host, req.headers["host"]);
+    u.host = req.headers["host"];
+    u.hostname = req.headers["host"].split(":")[0];
+
     for (item in dictionary) {
-        queryParams[item] = dictionary[item];
+        u.query[item] = dictionary[item];
     }
-    query = "?"+querystring.stringify(queryParams);
-    var fullURL = path + query;
-    return fullURL;
+    var query = "?"+querystring.stringify(u.query);
+    u.href = u.href.substr(0, u.href.length - u.path.length) + u.pathname + query;
+    return u.href;
 }
 
 
