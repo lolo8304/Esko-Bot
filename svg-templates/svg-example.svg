@@ -1,0 +1,33 @@
+<g>
+      <text x='30' y='30' font-size='18px' text-anchor='middle' font-weight='bold' fill='crimson' >
+            <tspan x='100'>Ski</tspan>
+            <tspan x='200'>Schuhe</tspan>
+            <tspan x='300'>Set</tspan>
+      </text>
+      <text x='30' y='30' font-size='18px' text-anchor='middle'>
+            <tspan x='30' dy='1.5em' font-weight='bold' fill='crimson' text-anchor='start'>Q1</tspan>
+            <tspan x='100'>$ 223</tspan>
+            <tspan x='200'>$ 195</tspan>
+            <tspan x='300'>$ 28</tspan>
+      </text>
+      <text x='30' y='30' font-size='18px' text-anchor='middle'>
+            <tspan x='30' dy='2.5em' font-weight='bold' fill='crimson' text-anchor='start'>Q2</tspan>
+            <tspan x='100'>$ 183</tspan>
+            <tspan x='200'>$ 70</tspan>
+            <tspan x='300'>$ 113</tspan>
+      </text>
+      <text x='30' y='30' font-size='18px' text-anchor='middle'>
+            <tspan x='30' dy='3.5em' font-weight='bold' fill='crimson' text-anchor='start'>Q3</tspan>
+            <tspan x='100'>$ 277</tspan>
+            <tspan x='200'>$ 88</tspan>
+            <tspan x='300'>$ 189</tspan>
+      </text>
+      <text x='30' y='30' font-size='18px' text-anchor='middle'>
+            <tspan x='30' dy='4.5em' font-weight='bold' fill='crimson' text-anchor='start'>Q4</tspan>
+            <tspan x='100'>$ 402</tspan>
+            <tspan x='200'>$ 133</tspan>
+            <tspan x='300'>$ 269</tspan>
+      </text>
+      <rect x='25' y='40' width='310' height='20' fill='gainsboro' style="fill-opacity: 0.4"/>
+      <rect x='25' y='76' width='310' height='20' fill='gainsboro' style="fill-opacity: 0.4"/>
+</g>

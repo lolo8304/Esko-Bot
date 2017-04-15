@@ -7,6 +7,7 @@ var restify = require('restify');
 var request = require('request');
 var sprintf = require('sprintf-js');
 const uuidV4 = require('uuid/v4');
+var StringBuffer = require('string-buffer');
 
 require('dotenv').config();
 var _ = require('lodash');
@@ -150,6 +151,90 @@ var dbURL = process.env.DB_APP_USER+':'+process.env.DB_APP_PWD+'@'+process.env.D
 var db = monk(dbURL);
 console.log("mongodb connected with URL="+dbURL);
 
+//=========================================================
+// start table image 
+//=========================================================
+
+function svg_start(buffer) {
+    svg_content(buffer, "<svg xmlns=\'http://www.w3.org/2000/svg\' xmlns:xlink=\'http://www.w3.org/1999/xlink\'>");
+}
+function svg_content(buffer, text) {
+    buffer.text = buffer.text + text;
+}
+function svg_end(buffer) {
+    svg_content(buffer, "</svg>");
+}
+function svg_table_start(buffer, startXY, widthArray, headerHeightEm, heightEm, headings) {
+    buffer.table = {
+        startXY: startXY,
+        widthArray: widthArray,
+        width: 0,
+        headerHeightEm: headerHeightEm,
+        heightEm: heightEm,
+        nof_cols: headings.length,
+        highlightRow: 1,
+        currentHeightEm: headerHeightEm
+    };
+    svg_content(buffer, "<g>\n");
+    svg_content(buffer, "<text x='"+startXY.x+"' y='"+startXY.y+"' font-size='18px' text-anchor='middle' font-weight='bold' fill='crimson'>\n");
+    var posX = buffer.table.startXY.x;
+    for (var i = 0; i < headings.length; ++i) {
+        svg_content(buffer, "<tspan x='"+posX+"'>"+headings[i]+"</tspan>\n");
+        posX = posX + widthArray[i];
+    }
+    var w = 0;
+    for (var i = 0; i < widthArray.length; ++i) {
+        w += widthArray[i];
+    }
+    buffer.table.width = w;
+    svg_content(buffer, "</text>");
+}
+function svg_table_row(buffer, data) {
+    svg_content(buffer, "<text x='"+buffer.table.startXY.x+"' y='"+buffer.table.startXY.y+"' font-size='18px' text-anchor='middle'>\n");
+    var posX = buffer.table.startXY.x;
+    var dyString = "dy='"+buffer.table.currentHeightEm+"em' font-weight='bold' fill='crimson' text-anchor='start'";
+    buffer.table.currentHeightEm += buffer.table.heightEm;
+    for (var i = 0; i < data.length; ++i) {
+        svg_content(buffer, "<tspan x='"+posX+"' "+dyString+">"+data[i]+"</tspan>\n");
+        posX = posX + buffer.table.widthArray[i];
+        dyString = "";
+    }
+    svg_content(buffer, "</text>");
+    if (buffer.table.highlightRow == 1) {
+        buffer.table.highlightRow = 0;
+        svg_content(buffer, "<rect x='"+(buffer.table.startXY.x-5)+"' y='"+buffer.table.currentHeightEm+"em' width='"+(buffer.table.width+10)+"' height='"+buffer.table.heightEm+"em' fill='gainsboro' style='fill-opacity: 0.4'/>\n");
+    } else {
+        buffer.table.highlightRow = 1;
+    }
+}
+
+function svg_table_end(buffer) {
+    svg_content(buffer, "</g>");
+}
+
+
+//based http://svg-whiz.com/svg/table.svg
+server.get('/miete.svg', function(req, res, next) {
+    var buffer = {text: ""};
+    svg_start(buffer);
+    svg_table_start(buffer, {x:30, y:30}, [100, 100, 100, 100], 1.5, 1, ["", "Ski", "Schuhe", "Set"]);
+    svg_table_row(buffer, ["E1", "10.-", "50.-", "100.-"]);
+    svg_table_row(buffer, ["E2", "10.-", "50.-", "100.-"]);
+    svg_table_row(buffer, ["E3", "10.-", "50.-", "100.-"]);
+//    svg_content(buffer, fs.readFileSync('./svg-templates/svg-example.svg', 'utf8'));
+    svg_table_end(buffer);
+    svg_end(buffer);
+    res.setHeader('Content-Disposition', "inline; filename=test.svg");
+    res.setHeader('Content-Type', 'image/svg+xml');
+    res.end(new Buffer(buffer.text));
+});
+
+//=========================================================
+// start table image 
+//=========================================================
+
+
+
 // Make our db accessible to our router
 server.use(function(req,res,next){
     req.db = db;
@@ -168,37 +253,27 @@ server.use(function(req,res,next){
 
     next();
 });
-/*
-server.post('/model/skis', function (req, res, next) {
-  var data = JSON.parse(decodeURIComponent(req.body));
-  _db[req.params.conversationId]= {
-    conversation: data.conversation, 
-    botdata: data.bot,
-    messages: prepareConversations(data.conversation, {})
-  };
-});
-*/
 
 var fs = require('fs');
 server.get('/swagger.local.yaml', function (req, res, next) {
   var contents = fs.readFileSync('./swagger/swagger.local.yaml', 'utf8');
   res.setHeader('content-type', 'text/yaml');
-  res.send(200, contents);
+  res.end(new Buffer(contents));
 });
 server.get('/swagger.local.json', function (req, res, next) {
   var contents = fs.readFileSync('./swagger/swagger.local.json', 'utf8');
   res.setHeader('content-type', 'application/json');
-  res.send(200, JSON.parse(contents));
+  res.end(new Buffer(contents));
 });
 server.get('/swagger.yaml', function (req, res, next) {
   var contents = fs.readFileSync('./swagger/swagger.yaml', 'utf8');
   res.setHeader('content-type', 'text/yaml');
-  res.send(200, contents);
+  res.end(new Buffer(contents));
 });
 server.get('/swagger.json', function (req, res, next) {
   var contents = fs.readFileSync('./swagger/swagger.json', 'utf8');
   res.setHeader('content-type', 'application/json');
-  res.send(200, JSON.parse(contents));
+  res.end(new Buffer(contents));
 });
 
 var querystring = require('querystring');
@@ -636,11 +711,11 @@ registerModelAPIs('ski', 'skis', '_id', false, true);
 registerModelAPIs('langlauf', 'langlauf', '_id', false, true); 
 registerModelAPIs('snowboard', 'snowboard', '_id', false, true); 
 
-
-
 //=========================================================
 // End Models
 //=========================================================
+
+
 
 
 //=========================================================
