@@ -155,6 +155,16 @@ console.log("mongodb connected with URL="+dbURL);
 // start table image 
 //=========================================================
 
+var numeral = require('numeral');
+
+function px2em(refPX, px) {
+    return numeral(px / refPX).format('0.00')+"em";
+}
+function em2px(refPX, em) {
+    var emNum = numeral(em.substr(0, em.indexOf("em"))).value();
+    return numeral(numeral(emNum * refPX).format('0.0')).value();
+}
+
 function svg_start(buffer) {
     svg_content(buffer, "<svg xmlns=\'http://www.w3.org/2000/svg\' xmlns:xlink=\'http://www.w3.org/1999/xlink\'>");
 }
@@ -164,70 +174,50 @@ function svg_content(buffer, text) {
 function svg_end(buffer) {
     svg_content(buffer, "</svg>");
 }
-function svg_table_start(buffer, startXY, widthArray, headerHeightEm, heightEm, headings) {
-    buffer.table = {
-        startXY: startXY,
-        widthArray: widthArray,
-        width: 0,
-        headerHeightEm: headerHeightEm,
-        heightEm: heightEm,
-        nof_cols: headings.length,
-        highlightRow: 1,
-        currentHeightEm: headerHeightEm
-    };
-    svg_content(buffer, "<g>\n");
-    svg_content(buffer, "<text x='"+startXY.x+"' y='"+startXY.y+"' font-size='18px' text-anchor='middle' font-weight='bold' fill='crimson'>\n");
-    var posX = buffer.table.startXY.x;
-    for (var i = 0; i < headings.length; ++i) {
-        svg_content(buffer, "<tspan x='"+posX+"'>"+headings[i]+"</tspan>\n");
-        posX = posX + widthArray[i];
-    }
-    var w = 0;
-    for (var i = 0; i < widthArray.length; ++i) {
-        w += widthArray[i];
-    }
-    buffer.table.width = w;
-    svg_content(buffer, "</text>");
-}
-function svg_table_row(buffer, data) {
-    svg_content(buffer, "<text x='"+buffer.table.startXY.x+"' y='"+buffer.table.startXY.y+"' font-size='18px' text-anchor='middle'>\n");
+function svg_table_row_internal(buffer, data, isFontWeightBold) {
+    var bold = isFontWeightBold ? "font-weight='bold' fill='crimson'" : "";
+    svg_content(buffer, "<text x='"+buffer.table.startXY.x+"' y='"+buffer.table.startXY.y+"' text-anchor='middle' "+bold+">\n");
     var posX = buffer.table.startXY.x;
     var dyString = "dy='"+buffer.table.currentHeightEm+"em' font-weight='bold' fill='crimson' text-anchor='start'";
-    buffer.table.currentHeightEm += buffer.table.heightEm;
     for (var i = 0; i < data.length; ++i) {
         svg_content(buffer, "<tspan x='"+posX+"' "+dyString+">"+data[i]+"</tspan>\n");
         posX = posX + buffer.table.widthArray[i];
         dyString = "";
     }
-    svg_content(buffer, "</text>");
-    if (buffer.table.highlightRow == 1) {
-        buffer.table.highlightRow = 0;
-        svg_content(buffer, "<rect x='"+(buffer.table.startXY.x-5)+"' y='"+buffer.table.currentHeightEm+"em' width='"+(buffer.table.width+10)+"' height='"+buffer.table.heightEm+"em' fill='gainsboro' style='fill-opacity: 0.4'/>\n");
-    } else {
-        buffer.table.highlightRow = 1;
+    svg_content(buffer, "</text>");    
+}
+
+function svg_table_start(buffer, startXY, fontSize, widthArray) {
+    buffer.table = {
+        startXY: startXY,
+        fontSize: fontSize,
+        widthArray: widthArray,
+        totalWidth: 0,
+        highlightRow: 1,
+        currentHeightEm: 0
+    };
+    buffer.table.totalWidth = widthArray.reduce((sum, value) => sum + value, 0);
+    svg_content(buffer, "<g font-size='"+buffer.table.fontSize+"px'>\n");
+}
+function svg_table_row(buffer, data, isStrong) {
+    if (!isStrong) {
+        buffer.table.currentHeightEm += 1;
+        var opacity = 0.0;
+        if (buffer.table.highlightRow == 1) {
+            buffer.table.highlightRow = 0;
+            opacity = 0.2;
+        } else {
+            buffer.table.highlightRow = 1;
+            opacity = 0.4;
+        }
+        svg_content(buffer, "<rect x='"+(buffer.table.startXY.x-5)+"' y='"+(buffer.table.currentHeightEm+0.2)+"em' width='"+(buffer.table.totalWidth+10)+"' height='1em' fill='gainsboro' style='fill-opacity: "+opacity+"'/>\n");
     }
+    svg_table_row_internal(buffer, data, isStrong);
 }
 
 function svg_table_end(buffer) {
     svg_content(buffer, "</g>");
 }
-
-
-//based http://svg-whiz.com/svg/table.svg
-server.get('/miete.svg', function(req, res, next) {
-    var buffer = {text: ""};
-    svg_start(buffer);
-    svg_table_start(buffer, {x:30, y:30}, [100, 100, 100, 100], 1.5, 1, ["", "Ski", "Schuhe", "Set"]);
-    svg_table_row(buffer, ["E1", "10.-", "50.-", "100.-"]);
-    svg_table_row(buffer, ["E2", "10.-", "50.-", "100.-"]);
-    svg_table_row(buffer, ["E3", "10.-", "50.-", "100.-"]);
-//    svg_content(buffer, fs.readFileSync('./svg-templates/svg-example.svg', 'utf8'));
-    svg_table_end(buffer);
-    svg_end(buffer);
-    res.setHeader('Content-Disposition', "inline; filename=test.svg");
-    res.setHeader('Content-Type', 'image/svg+xml');
-    res.end(new Buffer(buffer.text));
-});
 
 //=========================================================
 // start table image 
@@ -333,7 +323,7 @@ function isInteger(obj) {
     return isNumeric(obj) && obj.indexOf('.') < 0;
 }
 
-function fullUrl(req, dictionary) {
+function thisURL(req, dictionary = {}) {
     var path = req.server.url + req.url;
     var u = url.parse(path, true);
     u.href = u.href.replace(u.host, req.headers["host"]);
@@ -344,8 +334,14 @@ function fullUrl(req, dictionary) {
         u.query[item] = dictionary[item];
     }
     var query = "?"+querystring.stringify(u.query);
-    u.href = u.href.substr(0, u.href.length - u.path.length) + u.pathname + query;
-    return u.href;
+    u.server = u.href.substr(0, u.href.length - u.path.length);
+    u.href = u.server + u.pathname + query;
+    return u;
+}
+
+
+function fullUrl(req, dictionary = {}) {
+    return thisURL(req, dictionary).href;
 }
 
 
@@ -809,11 +805,18 @@ function angebotTitlePersonen(angebot) {
 
 bot.dialog('/Ski/Angebot', [
   function (session, args, next) {
+        var personen = session.userData.angebot.personen;
+        var data = [];
+        for (var i = 0; i < personen.length; ++i) {
+            var p = personen[i];
+            data.push({type: p.type, piste: p.piste});
+        }
+        var dataString = JSON.stringify(data);
         var card = new builder.HeroCard(session)
             .title("$.Resultat.Titel", session.userData.angebot.personen.length)
             .text(angebotTitlePersonen(session.userData.angebot))
             .images([
-                 builder.CardImage.create(session, "https://www.naturkosmetik-appenzell.ch/wp-content/uploads/2017/04/tabelle2-e1491164175979.png?uuid="+uuidV4())
+                 builder.CardImage.create(session, process.env.ESKO_ENDPOINT_URL+"/miete.svg?data="+dataString+"&uuid="+uuidV4())
             ]);
         var msg = new builder.Message(session).addAttachment(card.toAttachment());
         session.send(msg);
@@ -878,7 +881,6 @@ bot.dialog('/Ski/PersonenEingaben', [
 bot.dialog('/Ski/Person', [
   function (session, args, next) {
     var nextPerson = getNextPerson(session.userData.angebot);
-    session.dialogData.person = nextPerson;
     if (nextPerson) {
       if (nextPerson.index == 0) {
         //session.send("$.Person.Start", nextPerson.type)
@@ -892,29 +894,13 @@ bot.dialog('/Ski/Person', [
   },
   function (session, results, next) {
     if (results.response) {
-      session.userData.angebot.personen.push(session.dialogData.person);
-      session.dialogData.person = null;
+      session.userData.angebot.personen.push(results.response);
       session.replaceDialog("/Ski/Person");
     } else {
       session.cancelDialog();
     }
   }
 ]);
-
-
-bot.dialog('/Ski/Piste', [
-  function (session, args, next) {
-    session.dialogData.person = args;
-    if (args.index == 0) {
-      choices(session, "$.Person.Piste", "$.Person.Piste.Choices", args.typeWithArtikel1);
-    } else {
-      choices(session, "$.Person.Piste", "$.Person.Piste.Choices", args.typeWithArtikelN);
-    }
-  },
-  function (session, results, next) {
-    session.endDialog();
-  }
-]).cancelAction('/Intro', "$.Ski.Abbruch", { matches: /(intro|help|start)/i });
 
 bot.dialog('/Ski/Erwachsener', [
   function (session, args, next) {
@@ -926,7 +912,7 @@ bot.dialog('/Ski/Erwachsener', [
       session.dialogData.person.piste = results.response.entity;
       session.userData.angebot.todoCount.countErwachsene--;
       session.userData.angebot.todoCount.countTotal--;
-      session.endDialog();
+      session.endDialogWithResult({response: session.dialogData.person});
     } else {
       session.cancelDialog();
     }
@@ -936,14 +922,14 @@ bot.dialog('/Ski/Erwachsener', [
 bot.dialog('/Ski/Kind', [
   function (session, args, next) {
     session.dialogData.person = args;
-    session.beginDialog("/Ski/Piste", args);
+    session.beginDialog("/Ski/PisteKind", args);
   },
   function (session, results, next) {
     if (results.response) {
       session.dialogData.person.piste = results.response.entity;
       session.userData.angebot.todoCount.countKinder--;
       session.userData.angebot.todoCount.countTotal--;
-      session.endDialog();
+      session.endDialogWithResult({response: session.dialogData.person});
     } else {
       session.cancelDialog();
     }
@@ -960,12 +946,34 @@ bot.dialog('/Ski/Jugendlicher', [
       session.dialogData.person.piste = results.response.entity;
       session.userData.angebot.todoCount.countJugendliche--;
       session.userData.angebot.todoCount.countTotal--;
-      session.endDialog();
+      session.endDialogWithResult({response: session.dialogData.person});
     } else {
       session.cancelDialog();
     }
   }
 ]);
+
+
+bot.dialog('/Ski/Piste', [
+  function (session, args, next) {
+    if (args.index == 0) {
+      choices(session, "$.Person.Piste", "$.Person.Piste.Choices", args.typeWithArtikel1);
+    } else {
+      choices(session, "$.Person.Piste", "$.Person.Piste.Choices", args.typeWithArtikelN);
+    }
+  }
+]).cancelAction('/Intro', "$.Ski.Abbruch", { matches: /(intro|help|start)/i });
+
+bot.dialog('/Ski/PisteKind', [
+  function (session, args, next) {
+    if (args.index == 0) {
+      choices(session, "$.Person.Piste", "$.Person.Piste.Kinder.Choices", args.typeWithArtikel1);
+    } else {
+      choices(session, "$.Person.Piste", "$.Person.Piste.Kinder.Choices", args.typeWithArtikelN);
+    }
+  }
+]).cancelAction('/Intro', "$.Ski.Abbruch", { matches: /(intro|help|start)/i });
+
 
 function findPrefixNumberOfEntity(entities, entityName) {
   const entity = (builder.EntityRecognizer.findEntity(entities || [], entityName) || {});
@@ -1012,3 +1020,69 @@ bot.dialog('/Ski/PersonenAuswahl', [
     });
   }
 ]);
+
+var rp = require("request-promise");
+
+//http://localhost:3978/model/skis/set/kind/blau
+function getMinPrices(typ, alter, piste) {
+    var dataGETurl = process.env.ESKO_ENDPOINT_URL+"/model/skis/"+typ.toLowerCase()+"/"+alter.toLowerCase()+"/"+piste.toLowerCase();
+    return rp(dataGETurl);
+}
+
+
+//based http://svg-whiz.com/svg/table.svg
+// [
+//    {"type":"Kind","piste":"rot"},
+//    {"type":"Erwachsener","piste":"blau"}
+//  ]
+//
+server.get('/miete.svg', function(req, res, next) {
+    var buffer = {text: ""};
+    var data = JSON.parse(req.param("data"));
+    svg_start(buffer);
+        svg_table_start(buffer, {x:0, y:'1em'}, 16, [50, 70, 70, 70, 70]);
+            svg_table_row(buffer, ["$", "Piste", "Ski", "Schuhe", "Set"], true);
+            var dataPromise = [];
+            for (var i = 0; i < data.length; ++i) {
+                dataPromise.push(getMinPrices("ski", data[i].type, data[i].piste));
+                dataPromise.push(getMinPrices("schuhe", data[i].type, data[i].piste));
+                dataPromise.push(getMinPrices("set", data[i].type, data[i].piste));
+            }
+            Promise.all(dataPromise).then(values => {
+                var t = 0;
+                var summeSki = summeSchuhe = summeSet = 0;
+                var summeSkiAb = summeSchuheAb = summeSetAb = false;
+                var empty = {tage_100: 0, tage_100_ab: false};
+                for (var i = 0; i < values.length; ++i) {
+                    var ski=JSON.parse(values[i++]).data[0] || empty;
+                    var schuhe=JSON.parse(values[i++]).data[0] || empty;
+                    var set=JSON.parse(values[i]).data[0] || empty;
+                    svg_table_row(buffer, [
+                        data[t].type.substr(0, 1), data[t].piste, 
+                        (ski.tage_100_ab ? "ab ":"")+ski.tage_100+".-", 
+                        (schuhe.tage_100_ab ? "ab ":"")+schuhe.tage_100+".-",
+                        (set.tage_100_ab ? "ab ":"")+set.tage_100+".-"
+                    ], false);
+                    summeSki += ski.tage_100;
+                    summeSkiAb |= ski.tage_100_ab;
+                    
+                    summeSchuhe += schuhe.tage_100;
+                    summeSchuheAb |= schuhe.tage_100_ab;
+
+                    summeSet += set.tage_100;
+                    summeSetAb |= set.tage_100_ab;
+                    t++;
+                }
+                svg_table_row(buffer, ["Total", "", 
+                    (summeSkiAb ? "ab ":"")+summeSki+".-", 
+                    (summeSchuheAb ? "ab ":"")+summeSchuhe+".-", 
+                    (summeSetAb ? "ab ":"")+summeSet+".-"
+                ], false);
+                svg_table_end(buffer);
+                svg_end(buffer);
+                res.setHeader('Content-Disposition', "inline; filename=test.svg");
+                res.setHeader('Content-Type', 'image/svg+xml');
+                res.end(new Buffer(buffer.text));
+
+            });
+});

@@ -49,6 +49,7 @@
   "$.Person.KindAlter.Choices": "unter 12 Jahren|12 - 18 Jahre|älter als 18 Jahre",
   "Welche Piste fährt der Erwachsene am liebsten?.Choices": "blau|rot|schwarz",
   "$.Person.Piste.Choices": "blau|rot|schwarz",
+  "$.Person.Piste.Kinder.Choices": "Aktion|blau|rot",
   "$.Langlauf.Fehler": "Für Langlauf besuche uns in unseren Laden, damit wir das Angebot auf Eure persönlichen Anforderungen zuschneiden können.",
   "$.Resultat.BestenDankDennoch": "Dennoch besten Dank - wir freuen uns auf Deinen Besuch bei uns im Sports-Village.ch in Uster oder auf unserer WebSeite http://sports-village.ch\"",
   "$.Snowboard.Fehler": "Für Snowboard besuche uns in unseren Laden, damit wir das Angebot auf Eure persönlichen Anforderungen zuschneiden können.",

@@ -1,0 +1,29 @@
+
+<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'><g font-size='18px'>
+<text x='0' y='1em' text-anchor='middle' font-weight='bold' fill='crimson'>
+<tspan x='30' dy='0em' font-weight='bold' fill='crimson' text-anchor='start'>$</tspan>
+<tspan x='70' >Ski</tspan>
+<tspan x='170' >Schuhe</tspan>
+<tspan x='270' >Set</tspan>
+</text>
+<text x='0' y='1em' text-anchor='middle'>
+<tspan x='30' dy='1em' font-weight='bold' fill='crimson' text-anchor='start'>E1</tspan>
+<tspan x='70' >1.-</tspan>
+<tspan x='170' >15.-</tspan>
+<tspan x='270' >115.-</tspan>
+</text>
+<rect x='25' y='1.2em' width='350' height='1em' fill='gainsboro' style='fill-opacity: 0.2'/>
+<text x='0' y='1em' text-anchor='middle'>
+<tspan x='30' dy='2em' font-weight='bold' fill='crimson' text-anchor='start'>E2</tspan>
+<tspan x='70' >10.-</tspan>
+<tspan x='170' >150.-</tspan>
+<tspan x='270' >1150.-</tspan>
+</text>
+<rect x='25' y='2.2em' width='350' height='1em' fill='gainsboro' style='fill-opacity: 0.4'/>
+<text x='0' y='1em' text-anchor='middle'>
+<tspan x='30' dy='3em' font-weight='bold' fill='crimson' text-anchor='start'>E3</tspan>
+<tspan x='70' >100.-</tspan>
+<tspan x='170' >1500.-</tspan>
+<tspan x='270' >11500.-</tspan>
+</text><rect x='25' y='3.2em' width='350' height='1em' fill='gainsboro' style='fill-opacity: 0.2'/>
+</g></svg>
