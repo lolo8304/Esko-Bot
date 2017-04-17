@@ -815,7 +815,7 @@ bot.dialog('/Ski/Angebot', [
         var link = process.env.ESKO_ENDPOINT_URL+"/miete.svg?data="+dataString+"&uuid="+uuidV4();
         var card = new builder.HeroCard(session)
             .title("$.Resultat.Titel", session.userData.angebot.personen.length)
-            .text(angebotTitlePersonen(session.userData.angebot) + "link "+link)
+            .text(angebotTitlePersonen(session.userData.angebot))
             .images([
                  builder.CardImage.create(session, link)
             ]);
