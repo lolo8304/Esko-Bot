@@ -812,11 +812,12 @@ bot.dialog('/Ski/Angebot', [
             data.push({type: p.type, piste: p.piste});
         }
         var dataString = JSON.stringify(data);
+        var link = process.env.ESKO_ENDPOINT_URL+"/miete.svg?data="+dataString+"&uuid="+uuidV4();
         var card = new builder.HeroCard(session)
             .title("$.Resultat.Titel", session.userData.angebot.personen.length)
-            .text(angebotTitlePersonen(session.userData.angebot))
+            .text(angebotTitlePersonen(session.userData.angebot) + "link "+link)
             .images([
-                 builder.CardImage.create(session, process.env.ESKO_ENDPOINT_URL+"/miete.svg?data="+dataString+"&uuid="+uuidV4())
+                 builder.CardImage.create(session, link)
             ]);
         var msg = new builder.Message(session).addAttachment(card.toAttachment());
         session.send(msg);
