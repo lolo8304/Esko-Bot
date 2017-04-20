@@ -218,7 +218,7 @@ function svg_table_row(buffer, data, isStrong) {
 }
 
 function svg_box(buffer, x, y, w, h) {
-    svg_content(buffer, "<rect fill='white' x='"+x+"' y='"+y+"' width='"+w+"' height='"+h+"'/>\n");
+    svg_content(buffer, "<rect fill='#010101' x='"+x+"' y='"+y+"' width='"+w+"px' height='"+h+"px'/>\n");
 }
 function svg_table_end(buffer) {
     svg_content(buffer, "</g>");
