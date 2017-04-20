@@ -834,7 +834,7 @@ bot.dialog('/Ski/Angebot', [
                 .text(angebotTitlePersonen(session.userData.angebot))
                 .images([
                     //builder.CardImage.create(session, link),
-                    builder.CardImage.create(session, process.env.ESKO_ENDPOINT_URL+"/test.svg"),
+                    //builder.CardImage.create(session, process.env.ESKO_ENDPOINT_URL+"/test.svg"),
                     builder.CardImage.create(session, process.env.ESKO_ENDPOINT_URL+"/test.png")
                 ])
                 .buttons([
