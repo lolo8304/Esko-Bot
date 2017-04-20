@@ -146,7 +146,9 @@ var dbURL = process.env.DB_APP_USER+':'+process.env.DB_APP_PWD+'@'+process.env.D
     +'&'+   'reconnectTries=5';
 
 // uncomment for localhost database
-//var dbURL = 'localhost:27018/esko-bot-db';
+if (!process.env.DB_APP_USER) {
+    dbURL = process.env.DB_APP_URL;
+}
     
 var db = monk(dbURL);
 console.log("mongodb connected with URL="+dbURL);
@@ -215,6 +217,9 @@ function svg_table_row(buffer, data, isStrong) {
     svg_table_row_internal(buffer, data, isStrong);
 }
 
+function svg_box(buffer, x, y, w, h) {
+    svg_content(buffer, "<rect fill='white' x='"+x+"' y='"+y+"' width='"+w+"' height='"+h+"'/>\n");
+}
 function svg_table_end(buffer) {
     svg_content(buffer, "</g>");
 }
@@ -811,18 +816,20 @@ bot.dialog('/Ski/Angebot', [
             var p = personen[i];
             data.push({type: p.type, piste: p.piste});
         }
-        var dataString = JSON.stringify(data);
-        var link = process.env.ESKO_ENDPOINT_URL+"/miete.svg?data="+dataString+"&uuid="+uuidV4();
-        var card = new builder.HeroCard(session)
-            .title("$.Resultat.Titel", session.userData.angebot.personen.length)
-            .text(angebotTitlePersonen(session.userData.angebot))
-            .images([
-                 builder.CardImage.create(session, link)
-            ]);
-        var msg = new builder.Message(session).addAttachment(card.toAttachment());
-        session.send(msg);
-        session.sendBatch();
-        session.endDialog();
+        session.sendTyping();
+        setSVGRentalResult(data, function (uuid, text) {
+            var link = process.env.ESKO_ENDPOINT_URL+"/miete.svg?uuid="+uuid;
+            var card = new builder.HeroCard(session)
+                .title("$.Resultat.Titel", session.userData.angebot.personen.length)
+                .text(angebotTitlePersonen(session.userData.angebot))
+                .images([
+                    builder.CardImage.create(session, link)
+                ]);
+            var msg = new builder.Message(session).addAttachment(card.toAttachment());
+            session.send(msg);
+            session.sendBatch();
+            session.endDialog();
+        });
   }
 ]);
 
@@ -1023,11 +1030,71 @@ bot.dialog('/Ski/PersonenAuswahl', [
 ]);
 
 var rp = require("request-promise");
+var LRUCache = require('lrucache');
+var svgResultCache = LRUCache(20);
 
 //http://localhost:3978/model/skis/set/kind/blau
 function getMinPrices(typ, alter, piste) {
     var dataGETurl = process.env.ESKO_ENDPOINT_URL+"/model/skis/"+typ.toLowerCase()+"/"+alter.toLowerCase()+"/"+piste.toLowerCase();
     return rp(dataGETurl);
+}
+
+/* data contains
+    [
+                {"type":"Kind","piste":"Aktion"},
+                {"type":"Erwachsener","piste":"schwarz"},
+    ]
+*/
+function setSVGRentalResult(data, cb) {
+    var buffer = {text: ""};
+    svg_start(buffer);
+    svg_table_start(buffer, {x:0, y:'1em'}, 16, [50, 70, 70, 70, 70]);
+    svg_box(buffer, 0, 0, buffer.table.totalWidth, buffer.table.totalWidth);
+
+    svg_table_row(buffer, ["$", "Piste", "Ski", "Schuhe", "Set"], true);
+    var dataPromise = [];
+    for (var i = 0; i < data.length; ++i) {
+        dataPromise.push(getMinPrices("ski", data[i].type, data[i].piste));
+        dataPromise.push(getMinPrices("schuhe", data[i].type, data[i].piste));
+        dataPromise.push(getMinPrices("set", data[i].type, data[i].piste));
+    }
+    Promise.all(dataPromise).then(values => {
+        var t = 0;
+        var summeSki = summeSchuhe = summeSet = 0;
+        var summeSkiAb = summeSchuheAb = summeSetAb = false;
+        var empty = {tage_100: 0, tage_100_ab: false};
+        for (var i = 0; i < values.length; ++i) {
+            var ski=JSON.parse(values[i++]).data[0] || empty;
+            var schuhe=JSON.parse(values[i++]).data[0] || empty;
+            var set=JSON.parse(values[i]).data[0] || empty;
+            svg_table_row(buffer, [
+                data[t].type.substr(0, 1), data[t].piste, 
+                (ski.tage_100_ab ? "ab ":"")+ski.tage_100+".-", 
+                (schuhe.tage_100_ab ? "ab ":"")+schuhe.tage_100+".-",
+                (set.tage_100_ab ? "ab ":"")+set.tage_100+".-"
+            ], false);
+            summeSki += ski.tage_100;
+            summeSkiAb |= ski.tage_100_ab;
+            
+            summeSchuhe += schuhe.tage_100;
+            summeSchuheAb |= schuhe.tage_100_ab;
+
+            summeSet += set.tage_100;
+            summeSetAb |= set.tage_100_ab;
+            t++;
+        }
+        svg_table_row(buffer, ["Total", "", 
+            (summeSkiAb ? "ab ":"")+summeSki+".-", 
+            (summeSchuheAb ? "ab ":"")+summeSchuhe+".-", 
+            (summeSetAb ? "ab ":"")+summeSet+".-"
+        ], false);
+        svg_table_end(buffer);
+        svg_end(buffer);
+        var uuid = uuidV4();
+        svgResultCache.set(uuid, buffer.text);
+        console.log("cache size svgResultCache: "+svgResultCache.info().length+" of "+svgResultCache.info().capacity);
+        cb(uuid, buffer.text);
+    });
 }
 
 
@@ -1038,52 +1105,12 @@ function getMinPrices(typ, alter, piste) {
 //  ]
 //
 server.get('/miete.svg', function(req, res, next) {
-    var buffer = {text: ""};
-    var data = JSON.parse(req.param("data"));
-    svg_start(buffer);
-        svg_table_start(buffer, {x:0, y:'1em'}, 16, [50, 70, 70, 70, 70]);
-            svg_table_row(buffer, ["$", "Piste", "Ski", "Schuhe", "Set"], true);
-            var dataPromise = [];
-            for (var i = 0; i < data.length; ++i) {
-                dataPromise.push(getMinPrices("ski", data[i].type, data[i].piste));
-                dataPromise.push(getMinPrices("schuhe", data[i].type, data[i].piste));
-                dataPromise.push(getMinPrices("set", data[i].type, data[i].piste));
-            }
-            Promise.all(dataPromise).then(values => {
-                var t = 0;
-                var summeSki = summeSchuhe = summeSet = 0;
-                var summeSkiAb = summeSchuheAb = summeSetAb = false;
-                var empty = {tage_100: 0, tage_100_ab: false};
-                for (var i = 0; i < values.length; ++i) {
-                    var ski=JSON.parse(values[i++]).data[0] || empty;
-                    var schuhe=JSON.parse(values[i++]).data[0] || empty;
-                    var set=JSON.parse(values[i]).data[0] || empty;
-                    svg_table_row(buffer, [
-                        data[t].type.substr(0, 1), data[t].piste, 
-                        (ski.tage_100_ab ? "ab ":"")+ski.tage_100+".-", 
-                        (schuhe.tage_100_ab ? "ab ":"")+schuhe.tage_100+".-",
-                        (set.tage_100_ab ? "ab ":"")+set.tage_100+".-"
-                    ], false);
-                    summeSki += ski.tage_100;
-                    summeSkiAb |= ski.tage_100_ab;
-                    
-                    summeSchuhe += schuhe.tage_100;
-                    summeSchuheAb |= schuhe.tage_100_ab;
-
-                    summeSet += set.tage_100;
-                    summeSetAb |= set.tage_100_ab;
-                    t++;
-                }
-                svg_table_row(buffer, ["Total", "", 
-                    (summeSkiAb ? "ab ":"")+summeSki+".-", 
-                    (summeSchuheAb ? "ab ":"")+summeSchuhe+".-", 
-                    (summeSetAb ? "ab ":"")+summeSet+".-"
-                ], false);
-                svg_table_end(buffer);
-                svg_end(buffer);
-                res.setHeader('Content-Disposition', "inline; filename=test.svg");
-                res.setHeader('Content-Type', 'image/svg+xml');
-                res.end(new Buffer(buffer.text));
-
-            });
+    var uuid = req.param("uuid");
+    var text = svgResultCache.get(uuid);
+    if (uuid && text) {
+        console.log("found from svgResultCache: "+uuid);
+        res.setHeader('Content-Disposition', "inline; filename=test.svg");
+        res.setHeader('Content-Type', 'image/svg+xml');
+        res.end(new Buffer(text));
+    }
 });

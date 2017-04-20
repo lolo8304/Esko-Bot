@@ -27,7 +27,8 @@
     "string-buffer": "^1.1.6",
     "numeral":"^2.0.6",
     "request-promise":"^4.2.0",
-    "sync-request":"^4.0.2"
+    "sync-request":"^4.0.2",
+    "lrucache":"^1.0.2"
 
   },
   "devDependencies": {
