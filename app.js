@@ -8,6 +8,7 @@ var request = require('request');
 var sprintf = require('sprintf-js');
 const uuidV4 = require('uuid/v4');
 var StringBuffer = require('string-buffer');
+var util = require('util');
 
 require('dotenv').config();
 var _ = require('lodash');
@@ -840,10 +841,31 @@ bot.dialog('/Ski/Angebot', [
                 .buttons([
                     builder.CardAction.openUrl(session, link, "im Browser öffnen")
                 ]);
-            var msg = new builder.Message(session).addAttachment(card);
-            session.send(msg);
-            session.sendBatch();
-            session.endDialog();
+
+            var card2 = new builder.AnimationCard(session)
+                .title("$.Resultat.Titel", session.userData.angebot.personen.length)
+                .subtitle(angebotTitlePersonen(session.userData.angebot))
+                //.image(builder.CardImage.create(session, process.env.ESKO_ENDPOINT_URL+"/test.png"))
+                .media([
+                    { url: process.env.ESKO_ENDPOINT_URL+"/test.svg" }
+                ]);
+
+            //var msg = new builder.Message(session).addAttachment(card2);
+            fs.readFile('./test1.png', function (err, data) {
+                var contentType = 'image/png';
+                var base64 = Buffer.from(data).toString('base64');
+
+                var msg = new builder.Message(session)
+                    .addAttachment({
+                        contentUrl: util.format('data:%s;base64,%s', contentType, base64),
+                        contentType: contentType,
+                        name: 'test.png'
+                    });
+
+                session.send(msg);
+                session.sendBatch();
+                session.endDialog();
+            });            
         });
   }
 ]);
