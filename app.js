@@ -276,7 +276,7 @@ server.get('/test.svg', function (req, res, next) {
   res.end(contents);
 });
 server.get('/test.png', function (req, res, next) {
-  var contents = fs.readFileSync('./test.png', '');
+  var contents = fs.readFileSync('./test1.png', '');
   res.setHeader('content-type', 'image/png');
   res.end(contents);
 });
