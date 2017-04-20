@@ -1035,6 +1035,8 @@ bot.dialog('/Ski/PersonenAuswahl', [
 var rp = require("request-promise");
 var LRUCache = require('lrucache');
 var svgResultCache = LRUCache(20);
+var hash = require('object-hash');
+
 
 //http://localhost:3978/model/skis/set/kind/blau
 function getMinPrices(typ, alter, piste) {
@@ -1086,6 +1088,7 @@ function setSVGRentalResult(data, cb) {
             summeSetAb |= set.tage_100_ab;
             t++;
         }
+        svg_table_row(buffer, ["", "", "", ""], false);
         svg_table_row(buffer, ["Total", "", 
             (summeSkiAb ? "ab ":"")+summeSki+".-", 
             (summeSchuheAb ? "ab ":"")+summeSchuhe+".-", 
@@ -1093,7 +1096,7 @@ function setSVGRentalResult(data, cb) {
         ], false);
         svg_table_end(buffer);
         svg_end(buffer);
-        var uuid = uuidV4();
+        var uuid = hash(uuidV4());
         svgResultCache.set(uuid, buffer.text);
         console.log("cache size svgResultCache: "+svgResultCache.info().length+" of "+svgResultCache.info().capacity);
         cb(uuid, buffer.text);
