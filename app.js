@@ -826,9 +826,9 @@ bot.dialog('/Ski/Angebot', [
                     builder.CardImage.create(session, link)
                 ])
                 .buttons([
-                    builder.CardAction.openUrl(session, link, "Link falls nicht sichtbar")
+                    builder.CardAction.openUrl(session, link, "im Browser öffnen")
                 ]);
-            var msg = new builder.Message(session).addAttachment(card.toAttachment());
+            var msg = new builder.Message(session).addAttachment(card);
             session.send(msg);
             session.sendBatch();
             session.endDialog();
