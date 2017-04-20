@@ -271,9 +271,14 @@ server.get('/swagger.json', function (req, res, next) {
   res.end(new Buffer(contents));
 });
 server.get('/test.svg', function (req, res, next) {
-  var contents = fs.readFileSync('./test.svg', 'utf8');
+  var contents = fs.readFileSync('./test.svg', '');
   res.setHeader('content-type', 'image/svg+xml');
-  res.end(new Buffer(contents));
+  res.end(contents);
+});
+server.get('/test.png', function (req, res, next) {
+  var contents = fs.readFileSync('./test.png', '');
+  res.setHeader('content-type', 'image/png');
+  res.end(contents);
 });
 
 var querystring = require('querystring');
@@ -829,7 +834,8 @@ bot.dialog('/Ski/Angebot', [
                 .text(angebotTitlePersonen(session.userData.angebot))
                 .images([
                     //builder.CardImage.create(session, link),
-                    builder.CardImage.create(session, process.env.ESKO_ENDPOINT_URL+"/test.svg")
+                    builder.CardImage.create(session, process.env.ESKO_ENDPOINT_URL+"/test.svg"),
+                    builder.CardImage.create(session, process.env.ESKO_ENDPOINT_URL+"/test.png")
                 ])
                 .buttons([
                     builder.CardAction.openUrl(session, link, "im Browser öffnen")
