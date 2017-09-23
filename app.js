@@ -17,8 +17,8 @@ var moment = require('moment');
 function choices(session, text, choices, ...args) {
     var intro = sprintf.sprintf(session.localizer.gettext(session.preferredLocale(), text), args);
     var options = session.localizer.gettext(session.preferredLocale(), choices);
-    //builder.Prompts.choice(session, intro, options, {listStyle: builder.ListStyle["inline"]});
-    builder.Prompts.choice(session, intro, options, {listStyle: builder.ListStyle["button"]});
+    builder.Prompts.choice(session, intro, options, {listStyle: builder.ListStyle["inline"]});
+    //builder.Prompts.choice(session, intro, options, {listStyle: builder.ListStyle["button"]});
     //builder.Prompts.choice(session, intro, options);
 }
 
