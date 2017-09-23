@@ -2,7 +2,7 @@
 A simple echo bot for the Microsoft Bot Framework. 
 -----------------------------------------------------------------------------*/
 
-var builder = require('./core/');
+var builder = require('botbuilder');
 var restify = require('restify');
 var request = require('request');
 var sprintf = require('sprintf-js');
