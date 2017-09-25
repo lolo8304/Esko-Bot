@@ -1117,7 +1117,7 @@ function setSVGRentalResult(data, cb) {
     var buffer = {text: ""};
     svg_start(buffer);
     svg_table_start(buffer, {x:0, y:'1em'}, 16, [50, 70, 70, 70, 70]);
-    svg_box(buffer, 0, 0, buffer.table.totalWidth, buffer.table.totalWidth);
+    svg_box(buffer, 0, 0, buffer.table.totalWidth, buffer.table.totalWidth / 2);
 
     svg_table_row(buffer, ["$", "Piste", "Ski", "Schuhe", "Set"], true);
     var dataPromise = [];
@@ -1160,7 +1160,7 @@ function setSVGRentalResult(data, cb) {
         svg_table_end(buffer);
         svg_end(buffer);
         var uuid = hash(uuidV4());
-        var pngBuffer = svg2png.sync(new Buffer(buffer.text), { width: buffer.table.totalWidth, height: buffer.table.totalWidth });        
+        var pngBuffer = svg2png.sync(new Buffer(buffer.text), { width: buffer.table.totalWidth, height: buffer.table.totalWidth / 2 });        
         svgResultCache.set(uuid, { svg: buffer.text, width: buffer.table.totalWidth, pngBuffer: pngBuffer });
         console.log("cache size svgResultCache: "+svgResultCache.info().length+" of "+svgResultCache.info().capacity);
         cb(uuid, buffer.text);
