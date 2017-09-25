@@ -1116,7 +1116,7 @@ const svg2png = require("svg2png");
 function setSVGRentalResult(data, cb) {
     var buffer = {text: ""};
     svg_start(buffer);
-    svg_table_start(buffer, {x:20, y:'1em'}, 16, [50, 70, 70, 70, 70]);
+    svg_table_start(buffer, {x:20, y:'2em'}, 16, [50, 70, 70, 70, 70]);
     svg_box(buffer, 0, 0, buffer.table.totalWidth, buffer.table.totalWidth / 2);
 
     svg_table_row(buffer, ["$", "Piste", "Ski", "Schuhe", "Set"], true);
