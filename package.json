@@ -34,7 +34,8 @@
     "request-promise":"^4.2.0",
     "sync-request":"^4.0.2",
     "lrucache":"^1.0.2",
-    "object-hash":"^1.1.8"
+    "object-hash":"^1.1.8",
+    "svg2png":"^4.1.1"
 
   },
   "devDependencies": {

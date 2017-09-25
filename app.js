@@ -850,7 +850,7 @@ bot.dialog('/Ski/Angebot', [
         }
         session.sendTyping();
         setSVGRentalResult(data, function (uuid, text) {
-            var link = process.env.ESKO_ENDPOINT_URL+"/miete.svg?uuid="+uuid;
+            var link = process.env.ESKO_ENDPOINT_URL+"/miete.png?uuid="+uuid;
             var card = new builder.HeroCard(session)
                 .title("$.Resultat.Titel", session.userData.angebot.personen.length)
                 .text(angebotTitlePersonen(session.userData.angebot))
@@ -1158,7 +1158,7 @@ function setSVGRentalResult(data, cb) {
         svg_table_end(buffer);
         svg_end(buffer);
         var uuid = hash(uuidV4());
-        svgResultCache.set(uuid, buffer.text);
+        svgResultCache.set(uuid, { text: buffer.text, width: buffer.table.totalWidth});
         console.log("cache size svgResultCache: "+svgResultCache.info().length+" of "+svgResultCache.info().capacity);
         cb(uuid, buffer.text);
     });
@@ -1173,11 +1173,24 @@ function setSVGRentalResult(data, cb) {
 //
 server.get('/miete.svg', function(req, res, next) {
     var uuid = req.param("uuid");
-    var text = svgResultCache.get(uuid);
-    if (uuid && text) {
+    var textWidth = svgResultCache.get(uuid);
+    if (uuid && textWidth) {
         console.log("found from svgResultCache: "+uuid);
         res.setHeader('Content-Disposition', "inline; filename=test.svg");
         res.setHeader('Content-Type', 'image/svg+xml');
-        res.end(new Buffer(text));
+        res.end(new Buffer(textWidth.text));
+    }
+});
+
+const svg2png = require("svg2png");
+server.get('/miete.png', function(req, res, next) {
+    var uuid = req.param("uuid");
+    var textWidth = svgResultCache.get(uuid);
+    if (uuid && textWidth) {
+        console.log("found from svgResultCache: "+uuid);
+        res.setHeader('Content-Disposition', "inline; filename="+uuid+".png");
+        res.setHeader('Content-Type', 'image/png');
+        const outputBuffer = svg2png.sync(new Buffer(textWidth.text), { width: textWidth.width, height: textWidth.width });
+        res.end(outputBuffer);
     }
 });
