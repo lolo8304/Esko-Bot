@@ -1111,6 +1111,8 @@ function getMinPrices(typ, alter, piste) {
                 {"type":"Erwachsener","piste":"schwarz"},
     ]
 */
+const svg2png = require("svg2png");
+
 function setSVGRentalResult(data, cb) {
     var buffer = {text: ""};
     svg_start(buffer);
@@ -1158,7 +1160,8 @@ function setSVGRentalResult(data, cb) {
         svg_table_end(buffer);
         svg_end(buffer);
         var uuid = hash(uuidV4());
-        svgResultCache.set(uuid, { text: buffer.text, width: buffer.table.totalWidth});
+        var pngBuffer = svg2png.sync(new Buffer(buffer.text), { width: buffer.table.totalWidth, height: buffer.table.totalWidth });        
+        svgResultCache.set(uuid, { svg: buffer.text, width: buffer.table.totalWidth, pngBuffer: pngBuffer });
         console.log("cache size svgResultCache: "+svgResultCache.info().length+" of "+svgResultCache.info().capacity);
         cb(uuid, buffer.text);
     });
@@ -1178,11 +1181,10 @@ server.get('/miete.svg', function(req, res, next) {
         console.log("found from svgResultCache: "+uuid);
         res.setHeader('Content-Disposition', "inline; filename=test.svg");
         res.setHeader('Content-Type', 'image/svg+xml');
-        res.end(new Buffer(textWidth.text));
+        res.end(new Buffer(textWidth.svg));
     }
 });
 
-const svg2png = require("svg2png");
 server.get('/miete.png', function(req, res, next) {
     var uuid = req.param("uuid");
     var textWidth = svgResultCache.get(uuid);
@@ -1190,7 +1192,6 @@ server.get('/miete.png', function(req, res, next) {
         console.log("found from svgResultCache: "+uuid);
         res.setHeader('Content-Disposition', "inline; filename="+uuid+".png");
         res.setHeader('Content-Type', 'image/png');
-        const outputBuffer = svg2png.sync(new Buffer(textWidth.text), { width: textWidth.width, height: textWidth.width });
-        res.end(outputBuffer);
+        res.end(textWidth.pngBuffer);
     }
 });
