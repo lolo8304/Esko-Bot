@@ -219,7 +219,7 @@ function svg_table_row(buffer, data, isStrong) {
 }
 
 function svg_box(buffer, x, y, w, h) {
-    svg_content(buffer, "<rect fill='#010101' x='"+x+"' y='"+y+"' width='"+w+"px' height='"+h+"px'/>\n");
+    svg_content(buffer, "<rect fill='#FFFFFF' x='"+x+"' y='"+y+"' width='"+w+"px' height='"+h+"px'/>\n");
 }
 function svg_table_end(buffer) {
     svg_content(buffer, "</g>");
@@ -723,6 +723,27 @@ registerModelAPIs('ski', 'skis', '_id', false, true);
 registerModelAPIs('langlauf', 'langlauf', '_id', false, true); 
 registerModelAPIs('snowboard', 'snowboard', '_id', false, true); 
 
+server.get('/images/:name', function (req, res, next) {
+    var imageName = req.params.name;
+    if (isEmpty(imageName)) {
+        return handleError(res,
+            new RestApiError("400", 'image name must be specified'));
+    }
+    if (imageName.indexOf("..") >= 0 || imageName.indexOf("/") >= 0) {
+        return handleError(res,
+            new RestApiError("400", 'invalid image name - only "name.ext" allowed'));
+    }
+    var ext = imageName.split(".");
+    if (ext.length == 0) {
+        return handleError(res,
+            new RestApiError("400", 'image has not extension'));
+    }
+    var contents = fs.readFileSync('./images/' + imageName, '');
+    res.setHeader('Content-Type', 'image/' + ext[ext.length - 1]);
+    res.end(contents);
+});
+
+
 //=========================================================
 // End Models
 //=========================================================
@@ -746,7 +767,7 @@ bot.dialog('/Intro', [
             .title("Esko-Bot")
             .text("$.Intro.Willkommen")
             .images([
-                 builder.CardImage.create(session, "https://bot-framework.azureedge.net/bot-icons-v1/Esko-Bot_AQV1EDC7d8QL9EC2WgFA64iy9uHF43619FMLCvC4vtE0uOo.png")
+                 builder.CardImage.create(session, process.env.ESKO_ENDPOINT_URL+"/images/esko.bot.png")
             ]);
         var msg = new builder.Message(session).addAttachment(card);
         session.send(msg);
@@ -834,9 +855,9 @@ bot.dialog('/Ski/Angebot', [
                 .title("$.Resultat.Titel", session.userData.angebot.personen.length)
                 .text(angebotTitlePersonen(session.userData.angebot))
                 .images([
-                    //builder.CardImage.create(session, link),
+                    builder.CardImage.create(session, link),
                     //builder.CardImage.create(session, process.env.ESKO_ENDPOINT_URL+"/test.svg"),
-                    builder.CardImage.create(session, process.env.ESKO_ENDPOINT_URL+"/test.png")
+                    //builder.CardImage.create(session, process.env.ESKO_ENDPOINT_URL+"/test.png")
                 ])
                 .buttons([
                     builder.CardAction.openUrl(session, link, "im Browser öffnen")
@@ -850,7 +871,9 @@ bot.dialog('/Ski/Angebot', [
                     { url: process.env.ESKO_ENDPOINT_URL+"/test.svg" }
                 ]);
 
+            var msg = new builder.Message(session).addAttachment(card);
             //var msg = new builder.Message(session).addAttachment(card2);
+            /*
             fs.readFile('./test1.png', function (err, data) {
                 var contentType = 'image/png';
                 var base64 = Buffer.from(data).toString('base64');
@@ -866,7 +889,11 @@ bot.dialog('/Ski/Angebot', [
                 session.sendBatch();
                 session.endDialog();
             });            
-        });
+            */
+            session.send(msg);
+            session.sendBatch();
+            session.endDialog();
+    });
   }
 ]);
 
