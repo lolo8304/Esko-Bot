@@ -14,9 +14,12 @@ require('dotenv').config();
 var _ = require('lodash');
 var moment = require('moment');
 
+function getT(session, text) {
+    return session.localizer.gettext(session.preferredLocale(), text)
+}
 function choices(session, text, choices, ...args) {
-    var intro = sprintf.sprintf(session.localizer.gettext(session.preferredLocale(), text), args);
-    var options = session.localizer.gettext(session.preferredLocale(), choices);
+    var intro = sprintf.sprintf(getT(session, text), args);
+    var options = getT(session, choices);
     //builder.Prompts.choice(session, intro, options, {listStyle: builder.ListStyle["inline"]});
     builder.Prompts.choice(session, intro, options, {listStyle: builder.ListStyle["button"]});
     //builder.Prompts.choice(session, intro, options);
@@ -846,7 +849,11 @@ bot.dialog('/Ski/Angebot', [
         var data = [];
         for (var i = 0; i < personen.length; ++i) {
             var p = personen[i];
-            data.push({type: p.type, piste: p.piste});
+            if (p.realType) {
+                data.push({type: p.realType, piste: p.piste});
+            } else {
+                data.push({type: p.type, piste: p.piste});
+            }
         }
         session.sendTyping();
         setSVGRentalResult(data, function (uuid, text) {
@@ -856,40 +863,12 @@ bot.dialog('/Ski/Angebot', [
                 .text(angebotTitlePersonen(session.userData.angebot))
                 .images([
                     builder.CardImage.create(session, link),
-                    //builder.CardImage.create(session, process.env.ESKO_ENDPOINT_URL+"/test.svg"),
-                    //builder.CardImage.create(session, process.env.ESKO_ENDPOINT_URL+"/test.png")
                 ])
                 .buttons([
                     builder.CardAction.openUrl(session, link, "im Browser öffnen")
                 ]);
 
-            var card2 = new builder.AnimationCard(session)
-                .title("$.Resultat.Titel", session.userData.angebot.personen.length)
-                .subtitle(angebotTitlePersonen(session.userData.angebot))
-                //.image(builder.CardImage.create(session, process.env.ESKO_ENDPOINT_URL+"/test.png"))
-                .media([
-                    { url: process.env.ESKO_ENDPOINT_URL+"/test.svg" }
-                ]);
-
             var msg = new builder.Message(session).addAttachment(card);
-            //var msg = new builder.Message(session).addAttachment(card2);
-            /*
-            fs.readFile('./test1.png', function (err, data) {
-                var contentType = 'image/png';
-                var base64 = Buffer.from(data).toString('base64');
-
-                var msg = new builder.Message(session)
-                    .addAttachment({
-                        contentUrl: util.format('data:%s;base64,%s', contentType, base64),
-                        contentType: contentType,
-                        name: 'test.png'
-                    });
-
-                session.send(msg);
-                session.sendBatch();
-                session.endDialog();
-            });            
-            */
             session.send(msg);
             session.sendBatch();
             session.endDialog();
@@ -954,11 +933,6 @@ bot.dialog('/Ski/Person', [
   function (session, args, next) {
     var nextPerson = getNextPerson(session.userData.angebot);
     if (nextPerson) {
-      if (nextPerson.index == 0) {
-        //session.send("$.Person.Start", nextPerson.type)
-      } else {
-        //session.send("$.Person.Weitere", nextPerson.type)
-      }
       session.beginDialog(nextPerson.indent, nextPerson);
     } else {
       session.endDialog();
@@ -992,39 +966,100 @@ bot.dialog('/Ski/Erwachsener', [
 ]);
 
 bot.dialog('/Ski/Kind', [
-  function (session, args, next) {
-    session.dialogData.person = args;
-    session.beginDialog("/Ski/PisteKind", args);
-  },
-  function (session, results, next) {
-    if (results.response) {
-      session.dialogData.person.piste = results.response.entity;
-      session.userData.angebot.todoCount.countKinder--;
-      session.userData.angebot.todoCount.countTotal--;
-      session.endDialogWithResult({response: session.dialogData.person});
-    } else {
-      session.cancelDialog();
+    function (session, args, next) {
+        session.dialogData.person = args;
+        session.beginDialog("/Ski/KinderAlter", args);
+    },    
+    function (session, results, next) {
+        if (results.response) {
+            session.dialogData.person.alter = results.response.entity;
+            if (session.dialogData.person.alter == getT(session, "$.Person.KindAlter.Unter12Jahren")) {
+                session.dialogData.person.realType = "Kind";
+                session.beginDialog("/Ski/SchuheKind", session.dialogData.person);
+            } else {
+                next();
+            }
+        } else {
+            session.cancelDialog();
+        }
+    },
+    function (session, results, next) {
+        if (results && results.response) {
+            /* answer from schuhe */
+            session.dialogData.person.schuhe = results.response.entity;
+            session.beginDialog("/Ski/PisteKind", session.dialogData.person);
+        } else {
+            /* passed schuhe question, goto piste */
+            if (session.dialogData.person.alter == getT(session, "$.Person.KindAlter.12_18Jahre")) {
+                session.dialogData.person.realType = "Jugendlicher";
+                session.beginDialog("/Ski/PisteJugendlicher", session.dialogData.person);
+            } else if (session.dialogData.person.alter == getT(session, "$.Person.KindAlter.Ueber18Jahre")) {
+                session.dialogData.person.realType = "Erwachsener";
+                session.beginDialog("/Ski/PisteErwachsener", session.dialogData.person);
+            }
+        }
+    },
+    function (session, results, next) {
+        if (results.response) {
+            session.dialogData.person.piste = results.response.entity;
+            session.userData.angebot.todoCount.countKinder--;
+            session.userData.angebot.todoCount.countTotal--;
+            session.endDialogWithResult({response: session.dialogData.person});
+        } else {
+            session.cancelDialog();
+        }
     }
-  }
 ]);
 
 bot.dialog('/Ski/Jugendlicher', [
-  function (session, args, next) {
-    session.dialogData.person = args;
-    session.beginDialog("/Ski/Piste", args);
-  },
-  function (session, results, next) {
-    if (results.response) {
-      session.dialogData.person.piste = results.response.entity;
-      session.userData.angebot.todoCount.countJugendliche--;
-      session.userData.angebot.todoCount.countTotal--;
-      session.endDialogWithResult({response: session.dialogData.person});
-    } else {
-      session.cancelDialog();
+    function (session, args, next) {
+        session.dialogData.person = args;
+        session.beginDialog("/Ski/KinderAlter", args);
+    },    
+    function (session, results, next) {
+        if (results.response) {
+            session.dialogData.person.alter = results.response.entity;
+            if (session.dialogData.person.alter == getT(session, "$.Person.KindAlter.12_18Jahre")) {
+                session.beginDialog("/Ski/PisteJugendlicher", session.dialogData.person);
+            } else if (session.dialogData.person.alter == getT(session, "$.Person.KindAlter.Ueber18Jahre")) {
+                session.beginDialog("/Ski/PisteErwachsener", session.dialogData.person);
+            }
+        } else {
+            session.cancelDialog();
+        }
+    },
+    function (session, results, next) {
+        if (results.response) {
+            session.dialogData.person.piste = results.response.entity;
+            session.userData.angebot.todoCount.countJugendliche--;
+            session.userData.angebot.todoCount.countTotal--;
+            session.endDialogWithResult({response: session.dialogData.person});
+        } else {
+         session.cancelDialog();
+        }
     }
-  }
 ]);
 
+
+bot.dialog('/Ski/KinderAlter', [
+    function (session, args, next) {
+      if (args.index == 0) {
+        choices(session, "$.Person.KindAlter", "$.Person.KindAlter.Choices", args.typeWithArtikel1);
+      } else {
+        choices(session, "$.Person.KindAlter", "$.Person.KindAlter.Choices", args.typeWithArtikelN);
+      }
+    }
+  ]).cancelAction('/Intro', "$.Ski.Abbruch", { matches: /(intro|help|start)/i });
+  
+  bot.dialog('/Ski/JugendlicherAlter', [
+    function (session, args, next) {
+      if (args.index == 0) {
+        choices(session, "$.Person.JugendlicherAlter", "$.Person.JugendlicherAlter.Choices", args.typeWithArtikel1);
+      } else {
+        choices(session, "$.Person.JugendlicherAlter", "$.Person.JugendlicherAlter.Choices", args.typeWithArtikelN);
+      }
+    }
+  ]).cancelAction('/Intro', "$.Ski.Abbruch", { matches: /(intro|help|start)/i });
 
 bot.dialog('/Ski/Piste', [
   function (session, args, next) {
@@ -1046,7 +1081,27 @@ bot.dialog('/Ski/PisteKind', [
   }
 ]).cancelAction('/Intro', "$.Ski.Abbruch", { matches: /(intro|help|start)/i });
 
+bot.dialog('/Ski/SchuheKind', [
+    function (session, args, next) {
+      if (args.index == 0) {
+        choices(session, "$.Person.KindSchuh", "$.Person.KindSchuh.Choices", args.typeWithArtikel1);
+      } else {
+        choices(session, "$.Person.KindSchuh", "$.Person.KindSchuh.Choices", args.typeWithArtikelN);
+      }
+    }
+  ]).cancelAction('/Intro', "$.Ski.Abbruch", { matches: /(intro|help|start)/i });
+    
 
+bot.dialog('/Ski/PisteJugendlicher', [
+    function (session, args, next) {
+      if (args.index == 0) {
+        choices(session, "$.Person.Piste", "$.Person.Piste.Jugendlicher.Choices", args.typeWithArtikel1);
+      } else {
+        choices(session, "$.Person.Piste", "$.Person.Piste.Jugendlicher.Choices", args.typeWithArtikelN);
+      }
+    }
+  ]).cancelAction('/Intro', "$.Ski.Abbruch", { matches: /(intro|help|start)/i });
+  
 function findPrefixNumberOfEntity(entities, entityName) {
   const entity = (builder.EntityRecognizer.findEntity(entities || [], entityName) || {});
   const numberEntities = (builder.EntityRecognizer.findAllEntities(entities || [], ENTITIES.NUMBER) || {});
@@ -1104,6 +1159,14 @@ function getMinPrices(typ, alter, piste) {
     var dataGETurl = process.env.ESKO_ENDPOINT_URL+"/model/skis/"+typ.toLowerCase()+"/"+alter.toLowerCase()+"/"+piste.toLowerCase();
     return rp(dataGETurl);
 }
+//http://localhost:3978/model/skis/set/kind/blau/29-34
+function getMinPrices(typ, alter, piste, kategorie) {
+    if (!kategorie) {
+        kategorie = "*"
+    }
+    var dataGETurl = process.env.ESKO_ENDPOINT_URL+"/model/skis/"+typ.toLowerCase()+"/"+alter.toLowerCase()+"/"+piste.toLowerCase()+"/"+kategorie.toLowerCase();
+    return rp(dataGETurl);
+}
 
 /* data contains
     [
@@ -1119,12 +1182,12 @@ function setSVGRentalResult(data, cb) {
     svg_table_start(buffer, {x:20, y:'2em'}, 16, [50, 70, 70, 70, 70]);
     svg_box(buffer, 0, 0, buffer.table.totalWidth, buffer.table.totalWidth / 2);
 
-    svg_table_row(buffer, ["$", "Piste", "Ski", "Schuhe", "Set"], true);
+    svg_table_row(buffer, ["Fr.", "Piste", "Ski", "Schuhe", "Set"], true);
     var dataPromise = [];
     for (var i = 0; i < data.length; ++i) {
-        dataPromise.push(getMinPrices("ski", data[i].type, data[i].piste));
-        dataPromise.push(getMinPrices("schuhe", data[i].type, data[i].piste));
-        dataPromise.push(getMinPrices("set", data[i].type, data[i].piste));
+        dataPromise.push(getMinPrices("ski", data[i].type, data[i].piste, data[i].schuhe));
+        dataPromise.push(getMinPrices("schuhe", data[i].type, data[i].piste, data[i].schuhe));
+        dataPromise.push(getMinPrices("set", data[i].type, data[i].piste, data[i].schuhe));
     }
     Promise.all(dataPromise).then(values => {
         var t = 0;
@@ -1135,10 +1198,14 @@ function setSVGRentalResult(data, cb) {
             var ski=JSON.parse(values[i++]).data[0] || empty;
             var schuhe=JSON.parse(values[i++]).data[0] || empty;
             var set=JSON.parse(values[i]).data[0] || empty;
+            var schuheText = "";
+            if (data[t].schuhe) {
+                schuheText = " ("+data[t].schuhe+")";
+            }
             svg_table_row(buffer, [
                 data[t].type.substr(0, 1), data[t].piste, 
                 (ski.tage_100_ab ? "ab ":"")+ski.tage_100+".-", 
-                (schuhe.tage_100_ab ? "ab ":"")+schuhe.tage_100+".-",
+                (schuhe.tage_100_ab ? "ab ":"")+schuhe.tage_100+".-"+schuheText,
                 (set.tage_100_ab ? "ab ":"")+set.tage_100+".-"
             ], false);
             summeSki += ski.tage_100;
