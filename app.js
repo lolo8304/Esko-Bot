@@ -845,7 +845,9 @@ bot.dialog('/Ski/Angebot', [
             var p = personen[i];
             data.push({type: p.realType || p.type, piste: p.piste, schuhe: p.schuhe, pisteSchuhe: p.pisteSchuhe});
         }
+//        session.send("Danke - wir haben alle Information erhalten und berechnen nun das Angebot");
         session.sendTyping()
+        session.sendBatch();
         setSVGRentalResult(data, function (uuid, text) {
             var link = process.env.ESKO_ENDPOINT_URL+"/miete.png?uuid="+uuid;
             var card = new builder.HeroCard(session)
@@ -860,7 +862,7 @@ bot.dialog('/Ski/Angebot', [
 
             var msg = new builder.Message(session).addAttachment(card);
             session.send(msg);
-            choices(session, $.Resultat.NochWas, $.Resultat.NochWas.Choices)
+            choices(session, "$.Resultat.NochWas", "$.Resultat.NochWas.Choices");
             session.sendBatch();
             session.endDialog();
     });
