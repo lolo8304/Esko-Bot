@@ -1168,9 +1168,8 @@ const svg2png = require("svg2png");
 function setSVGRentalResult(data, cb) {
     var buffer = {text: ""};
     svg_start(buffer);
-    svg_table_start(buffer, {x:20, y:'2em'}, 16, [80, 70, 70, 70, 70, 70]);
-    svg_box(buffer, 0, 0, buffer.table.totalWidth, buffer.table.totalWidth * 2 / 3);
-
+    svg_table_start(buffer, {x:20, y:'2em'}, 16, [70, 70, 70, 70, 70, 70]);
+    svg_box(buffer, 0, 0, buffer.table.totalWidth, buffer.table.totalWidth / 2);
     svg_table_row(buffer, ["Person", "Piste", "Ski", "Schuhe", "Stock", "Set"], true);
     var dataPromise = [];
     for (var i = 0; i < data.length; ++i) {
@@ -1194,7 +1193,7 @@ function setSVGRentalResult(data, cb) {
                 schuheText = " ("+data[t].schuhe+")";
             }
             svg_table_row(buffer, [
-                data[t].type.substr(0, 1)+schuheText, 
+                (t+1)+":"+data[t].type.substr(0, 1), 
                 data[t].piste, 
                 (ski.tage_100_ab ? "ab ":"")+ski.tage_100+".-", 
                 (schuhe.tage_100_ab ? "ab ":"")+schuhe.tage_100+".-",
@@ -1214,17 +1213,32 @@ function setSVGRentalResult(data, cb) {
             summeSetAb |= set.tage_100_ab;
             t++;
         }
-        svg_table_row(buffer, ["", "", "", ""], false);
-        svg_table_row(buffer, ["Total", "", 
+
+        svg_table_row(buffer, ["", "", "", "", "", ""], false);
+        svg_table_row(buffer, ["Total", 
+            "", 
             (summeSkiAb ? "ab ":"")+summeSki+".-", 
             (summeSchuheAb ? "ab ":"")+summeSchuhe+".-", 
             (summeStockAb ? "ab ":"")+summeStock+".-", 
             (summeSetAb ? "ab ":"")+summeSet+".-"
         ], false);
+        var first = true;
+        for (var t = 0; t < data.length; t++) {
+            if (data[t].schuhe) {
+                if (first) {
+                    svg_table_row(buffer, ["", "", "", "", "", ""], false);                    
+                    svg_table_row(buffer, ["Zusatzinformationen:", "", "", "", "", ""], false);                    
+                    first = false;
+                }
+                var schuheText = (t+1)+".Kind Schuhe "+data[t].schuhe;
+                svg_table_row(buffer, [schuheText, "", "", ""], false);
+            }
+        }
+    
         svg_table_end(buffer);
         svg_end(buffer);
         var uuid = hash(uuidV4());
-        var pngBuffer = svg2png.sync(new Buffer(buffer.text), { width: buffer.table.totalWidth, height: buffer.table.totalWidth * 2 / 3 });        
+        var pngBuffer = svg2png.sync(new Buffer(buffer.text), { width: buffer.table.totalWidth, height: buffer.table.totalWidth /2 });        
         svgResultCache.set(uuid, { svg: buffer.text, width: buffer.table.totalWidth, pngBuffer: pngBuffer });
         console.log("cache size svgResultCache: "+svgResultCache.info().length+" of "+svgResultCache.info().capacity);
         cb(uuid, buffer.text);
