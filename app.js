@@ -872,7 +872,7 @@ bot.dialog('/Ski/Angebot', [
 
             var msg = new builder.Message(session).addAttachment(card);
             session.send(msg);
-            choices(session, "$.Resultat.NochWas", "$.Resultat.NochWas.Choices");
+            //choices(session, "$.Resultat.NochWas", "$.Resultat.NochWas.Choices");
             session.sendBatch();
             session.endDialog();
     });
