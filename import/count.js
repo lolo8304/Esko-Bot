@@ -1,5 +1,6 @@
 var importMeta = [
-    { "collection" : "skis", "file" : "./2016-skis.json"}
+    { "collection" : "skis", "file" : "./2016-skis.json"},
+    { "collection" : "angebote", "file" : "./2016-skis.json"}
 ];
 
 for (var i = 0, l = importMeta.length; i < l; i++){

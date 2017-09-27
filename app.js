@@ -299,6 +299,16 @@ function getHttpErrorCode(e) {
     }
 }
 
+function isError(e, docs, defaultString) {
+    if (e && e.name == "RestApiError") {
+        return true;
+    } else if (e) {
+        return true;
+    } else if (!docs && defaultString != undefined) {
+        return true;
+    }
+    return false;
+}
 function handleError(res, e, docs, defaultString) {
     if (e && e.name == "RestApiError") {
         console.log("handle error: e="+e+", docs="+docs+", str="+defaultString);
@@ -848,7 +858,7 @@ bot.dialog('/Ski/Angebot', [
 //        session.send("Danke - wir haben alle Information erhalten und berechnen nun das Angebot");
         session.sendTyping()
         session.sendBatch();
-        setSVGRentalResult(data, function (uuid, text) {
+        setSVGRentalResult(session.message.address.user, data, function (uuid, text) {
             var link = process.env.ESKO_ENDPOINT_URL+"/miete.png?uuid="+uuid;
             var card = new builder.HeroCard(session)
                 .title("$.Resultat.Titel", session.userData.angebot.personen.length)
@@ -1165,12 +1175,30 @@ function getMinPrices(typ, alter, piste, kategorie) {
 */
 const svg2png = require("svg2png");
 
-function setSVGRentalResult(data, cb) {
+function saveObjectToDB(db, collectionName, object, callback_Error_UUID) {
+    var collection = db.get(collectionName);
+    collection.insert(object, function(e, insertedItem) {
+        callback_Error_UUID(e, insertedItem._id.toString());
+    });
+}
+function getObjectFromDB(db, collectionName, uuid, callback_UUID) {
+    var collection = db.get(collectionName);
+    collection.findOne({ _id : uuid }, function(e,docs){
+        if (isError(e, docs, 'No '+collectionName+' found with _id '+uuid)) {
+            callback_UUID(undefined);
+            return;
+        }
+        callback_UUID(docs);
+        return;
+    });
+}
+
+function setSVGRentalResult(user, data, cb) {
     var buffer = {text: ""};
     svg_start(buffer);
     svg_table_start(buffer, {x:20, y:'2em'}, 16, [70, 70, 70, 70, 70, 70]);
     svg_box(buffer, 0, 0, buffer.table.totalWidth, buffer.table.totalWidth / 2);
-    svg_table_row(buffer, ["Person", "Piste", "Ski", "Schuhe", "Stock", "Set"], true);
+    svg_table_row(buffer, ["Wer", "Piste", "Ski", "Schuhe", "Stock", "Set"], true);
     var dataPromise = [];
     for (var i = 0; i < data.length; ++i) {
         dataPromise.push(getMinPrices("ski", data[i].type, data[i].piste));
@@ -1237,12 +1265,24 @@ function setSVGRentalResult(data, cb) {
     
         svg_table_end(buffer);
         svg_end(buffer);
-        var uuid = hash(uuidV4());
-        var pngBuffer = svg2png.sync(new Buffer(buffer.text), { width: buffer.table.totalWidth, height: buffer.table.totalWidth /2 });        
-        svgResultCache.set(uuid, { svg: buffer.text, width: buffer.table.totalWidth, pngBuffer: pngBuffer });
-        console.log("cache size svgResultCache: "+svgResultCache.info().length+" of "+svgResultCache.info().capacity);
-        cb(uuid, buffer.text);
+        var pngBuffer = svg2png.sync(new Buffer(buffer.text), { width: buffer.table.totalWidth, height: buffer.table.totalWidth /2 });
+        var angebot = { user: user, data: data, svg: buffer.text, width: buffer.table.totalWidth, pngBase64Encoded: pngBuffer.toString('base64') };
+        saveObjectToDB(db, "angebote", angebot, function(error, uuid) {
+            svgResultCache.set(uuid, angebot);
+            console.log("cache size svgResultCache: "+svgResultCache.info().length+" of "+svgResultCache.info().capacity);
+            cb(uuid, buffer.text);
+        });
     });
+}
+
+
+function getCachedObject(collectionName, uuid, callback_Object) {
+    var object = svgResultCache.get(uuid);
+    if (uuid && !object) {
+        getObjectFromDB(db, collectionName, uuid, callback_Object);
+    } else {
+        callback_Object(object);        
+    }
 }
 
 
@@ -1254,22 +1294,30 @@ function setSVGRentalResult(data, cb) {
 //
 server.get('/miete.svg', function(req, res, next) {
     var uuid = req.param("uuid");
-    var textWidth = svgResultCache.get(uuid);
-    if (uuid && textWidth) {
-        console.log("found from svgResultCache: "+uuid);
-        res.setHeader('Content-Disposition', "inline; filename=test.svg");
-        res.setHeader('Content-Type', 'image/svg+xml');
-        res.end(new Buffer(textWidth.svg));
-    }
+    getCachedObject("angebote", uuid, function (object) {
+        if (uuid && object) {
+            console.log("found from svgResultCache: "+uuid);
+            res.setHeader('Content-Disposition', "inline; filename=test.svg");
+            res.setHeader('Content-Type', 'image/svg+xml');
+            res.end(new Buffer(object.svg));
+        } else {
+            res.status(400)
+            res.end();
+        }
+    });
 });
 
 server.get('/miete.png', function(req, res, next) {
     var uuid = req.param("uuid");
-    var textWidth = svgResultCache.get(uuid);
-    if (uuid && textWidth) {
-        console.log("found from svgResultCache: "+uuid);
-        res.setHeader('Content-Disposition', "inline; filename="+uuid+".png");
-        res.setHeader('Content-Type', 'image/png');
-        res.end(textWidth.pngBuffer);
-    }
+    getCachedObject("angebote", uuid, function(object) {
+        if (uuid && object) {
+            console.log("found from svgResultCache: "+uuid);
+            res.setHeader('Content-Disposition', "inline; filename="+uuid+".png");
+            res.setHeader('Content-Type', 'image/png');
+            res.end(new Buffer(object.pngBase64Encoded, 'base64'));
+        } else {
+            res.status(400)
+            res.end();
+        }
+    });
 });
