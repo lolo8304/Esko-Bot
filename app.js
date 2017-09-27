@@ -17,6 +17,9 @@ var moment = require('moment');
 function getT(session, text) {
     return session.localizer.gettext(session.preferredLocale(), text)
 }
+function getTT(session, text, ...args) {
+    return sprintf.sprintf(getT(session, text), args)
+}
 function choices(session, text, choices, ...args) {
     var intro = sprintf.sprintf(getT(session, text), args);
     var options = getT(session, choices);
@@ -274,16 +277,7 @@ server.get('/swagger.json', function (req, res, next) {
   res.setHeader('content-type', 'application/json');
   res.end(new Buffer(contents));
 });
-server.get('/test.svg', function (req, res, next) {
-  var contents = fs.readFileSync('./test.svg', '');
-  res.setHeader('content-type', 'image/svg+xml');
-  res.end(contents);
-});
-server.get('/test.png', function (req, res, next) {
-  var contents = fs.readFileSync('./test1.png', '');
-  res.setHeader('content-type', 'image/png');
-  res.end(contents);
-});
+
 
 var querystring = require('querystring');
 var url = require('url');
@@ -849,13 +843,9 @@ bot.dialog('/Ski/Angebot', [
         var data = [];
         for (var i = 0; i < personen.length; ++i) {
             var p = personen[i];
-            if (p.realType) {
-                data.push({type: p.realType, piste: p.piste});
-            } else {
-                data.push({type: p.type, piste: p.piste});
-            }
+            data.push({type: p.realType || p.type, piste: p.piste, schuhe: p.schuhe, pisteSchuhe: p.pisteSchuhe});
         }
-        session.sendTyping();
+        session.sendTyping()
         setSVGRentalResult(data, function (uuid, text) {
             var link = process.env.ESKO_ENDPOINT_URL+"/miete.png?uuid="+uuid;
             var card = new builder.HeroCard(session)
@@ -870,6 +860,7 @@ bot.dialog('/Ski/Angebot', [
 
             var msg = new builder.Message(session).addAttachment(card);
             session.send(msg);
+            choices(session, $.Resultat.NochWas, $.Resultat.NochWas.Choices)
             session.sendBatch();
             session.endDialog();
     });
@@ -883,27 +874,24 @@ function getNextPerson(angebot) {
     if (todo.countErwachsene > 0) {
       return { 
         type: "Erwachsener", 
-        typeWithArtikel1: "der erste Erwachsene", 
-        typeWithArtikelN: "der nächste Erwachsene", 
         typeMultiple: "Erwachsene",
+        typeWithArtikel: "der %s. Erwachsene", 
         indent: "/Ski/Erwachsener",
         index: angebot.counts.countErwachsene - todo.countErwachsene
       }
     } else if (todo.countJugendliche > 0) {
       return { 
         type: "Jugendlicher", 
-        typeWithArtikel1: "der erste Jugendliche", 
-        typeWithArtikelN: "der nächste Jugendliche", 
         typeMultiple: "Jugendliche",
+        typeWithArtikel: "der %s. Jugendliche", 
         indent: "/Ski/Jugendlicher",
         index: angebot.counts.countJugendliche - todo.countJugendliche
       }
     } else {
       return { 
         type: "Kind", 
-        typeWithArtikel1: "das erste Kind", 
-        typeWithArtikelN: "das nächste Kind", 
         typeMultiple: "Kinder",
+        typeWithArtikel: "das %s. Kind", 
         indent: "/Ski/Kind",
         index: angebot.counts.countKinder - todo.countKinder
       }
@@ -951,14 +939,18 @@ bot.dialog('/Ski/Person', [
 bot.dialog('/Ski/Erwachsener', [
   function (session, args, next) {
     session.dialogData.person = args;
-    session.beginDialog("/Ski/Piste", args);
+    session.beginDialog("/Ski/PisteErwachsener", args);
   },
   function (session, results, next) {
     if (results.response) {
-      session.dialogData.person.piste = results.response.entity;
-      session.userData.angebot.todoCount.countErwachsene--;
-      session.userData.angebot.todoCount.countTotal--;
-      session.endDialogWithResult({response: session.dialogData.person});
+        session.dialogData.person.piste = results.response.entity;
+        session.dialogData.person.pisteSchuhe = session.dialogData.person.piste;
+        if (session.dialogData.person.piste == "Aktion") {
+            session.dialogData.person.pisteSchuhe = "blau";
+        }
+        session.userData.angebot.todoCount.countErwachsene--;
+        session.userData.angebot.todoCount.countTotal--;
+        session.endDialogWithResult({response: session.dialogData.person});
     } else {
       session.cancelDialog();
     }
@@ -1002,6 +994,7 @@ bot.dialog('/Ski/Kind', [
     function (session, results, next) {
         if (results.response) {
             session.dialogData.person.piste = results.response.entity;
+            session.dialogData.person.pisteSchuhe = session.dialogData.person.piste;
             session.userData.angebot.todoCount.countKinder--;
             session.userData.angebot.todoCount.countTotal--;
             session.endDialogWithResult({response: session.dialogData.person});
@@ -1014,14 +1007,16 @@ bot.dialog('/Ski/Kind', [
 bot.dialog('/Ski/Jugendlicher', [
     function (session, args, next) {
         session.dialogData.person = args;
-        session.beginDialog("/Ski/KinderAlter", args);
+        session.beginDialog("/Ski/JugendlicherAlter", args);
     },    
     function (session, results, next) {
         if (results.response) {
             session.dialogData.person.alter = results.response.entity;
-            if (session.dialogData.person.alter == getT(session, "$.Person.KindAlter.12_18Jahre")) {
+            if (session.dialogData.person.alter == getT(session, "$.Person.JugendlicherAlter.12_18Jahre")) {
+                session.dialogData.person.realType = "Jugendlicher";
                 session.beginDialog("/Ski/PisteJugendlicher", session.dialogData.person);
-            } else if (session.dialogData.person.alter == getT(session, "$.Person.KindAlter.Ueber18Jahre")) {
+            } else if (session.dialogData.person.alter == getT(session, "$.Person.JugendlicherAlter.Ueber18Jahre")) {
+                session.dialogData.person.realType = "Erwachsener";
                 session.beginDialog("/Ski/PisteErwachsener", session.dialogData.person);
             }
         } else {
@@ -1031,6 +1026,10 @@ bot.dialog('/Ski/Jugendlicher', [
     function (session, results, next) {
         if (results.response) {
             session.dialogData.person.piste = results.response.entity;
+            session.dialogData.person.pisteSchuhe = session.dialogData.person.piste;
+            if (session.dialogData.person.piste == "Aktion") {
+                session.dialogData.person.pisteSchuhe = "blau";
+            }
             session.userData.angebot.todoCount.countJugendliche--;
             session.userData.angebot.todoCount.countTotal--;
             session.endDialogWithResult({response: session.dialogData.person});
@@ -1043,62 +1042,44 @@ bot.dialog('/Ski/Jugendlicher', [
 
 bot.dialog('/Ski/KinderAlter', [
     function (session, args, next) {
-      if (args.index == 0) {
-        choices(session, "$.Person.KindAlter", "$.Person.KindAlter.Choices", args.typeWithArtikel1);
-      } else {
-        choices(session, "$.Person.KindAlter", "$.Person.KindAlter.Choices", args.typeWithArtikelN);
-      }
+        var nThPersonText = getTT(session, args.typeWithArtikel, args.index+1);
+        choices(session, "$.Person.KindAlter", "$.Person.KindAlter.Choices", nThPersonText);
     }
   ]).cancelAction('/Intro', "$.Ski.Abbruch", { matches: /(intro|help|start)/i });
   
   bot.dialog('/Ski/JugendlicherAlter', [
     function (session, args, next) {
-      if (args.index == 0) {
-        choices(session, "$.Person.JugendlicherAlter", "$.Person.JugendlicherAlter.Choices", args.typeWithArtikel1);
-      } else {
-        choices(session, "$.Person.JugendlicherAlter", "$.Person.JugendlicherAlter.Choices", args.typeWithArtikelN);
-      }
+        var nThPersonText = getTT(session, args.typeWithArtikel, args.index+1);
+        choices(session, "$.Person.JugendlicherAlter", "$.Person.JugendlicherAlter.Choices", nThPersonText);
     }
   ]).cancelAction('/Intro', "$.Ski.Abbruch", { matches: /(intro|help|start)/i });
 
-bot.dialog('/Ski/Piste', [
+bot.dialog('/Ski/PisteErwachsener', [
   function (session, args, next) {
-    if (args.index == 0) {
-      choices(session, "$.Person.Piste", "$.Person.Piste.Choices", args.typeWithArtikel1);
-    } else {
-      choices(session, "$.Person.Piste", "$.Person.Piste.Choices", args.typeWithArtikelN);
-    }
+    var nThPersonText = getTT(session, args.typeWithArtikel, args.index+1);
+    choices(session, "$.Person.Piste", "$.Person.Piste.Choices", nThPersonText);
   }
 ]).cancelAction('/Intro', "$.Ski.Abbruch", { matches: /(intro|help|start)/i });
 
 bot.dialog('/Ski/PisteKind', [
   function (session, args, next) {
-    if (args.index == 0) {
-      choices(session, "$.Person.Piste", "$.Person.Piste.Kinder.Choices", args.typeWithArtikel1);
-    } else {
-      choices(session, "$.Person.Piste", "$.Person.Piste.Kinder.Choices", args.typeWithArtikelN);
-    }
+    var nThPersonText = getTT(session, args.typeWithArtikel, args.index+1);
+    choices(session, "$.Person.Piste", "$.Person.Piste.Kinder.Choices", nThPersonText);
   }
 ]).cancelAction('/Intro', "$.Ski.Abbruch", { matches: /(intro|help|start)/i });
 
 bot.dialog('/Ski/SchuheKind', [
     function (session, args, next) {
-      if (args.index == 0) {
-        choices(session, "$.Person.KindSchuh", "$.Person.KindSchuh.Choices", args.typeWithArtikel1);
-      } else {
-        choices(session, "$.Person.KindSchuh", "$.Person.KindSchuh.Choices", args.typeWithArtikelN);
-      }
+        var nThPersonText = getTT(session, args.typeWithArtikel, args.index+1);
+        choices(session, "$.Person.KindSchuh", "$.Person.KindSchuh.Choices", nThPersonText);
     }
   ]).cancelAction('/Intro', "$.Ski.Abbruch", { matches: /(intro|help|start)/i });
     
 
 bot.dialog('/Ski/PisteJugendlicher', [
     function (session, args, next) {
-      if (args.index == 0) {
-        choices(session, "$.Person.Piste", "$.Person.Piste.Jugendlicher.Choices", args.typeWithArtikel1);
-      } else {
-        choices(session, "$.Person.Piste", "$.Person.Piste.Jugendlicher.Choices", args.typeWithArtikelN);
-      }
+        var nThPersonText = getTT(session, args.typeWithArtikel, args.index+1);
+        choices(session, "$.Person.Piste", "$.Person.Piste.Jugendlicher.Choices", nThPersonText);
     }
   ]).cancelAction('/Intro', "$.Ski.Abbruch", { matches: /(intro|help|start)/i });
   
@@ -1156,6 +1137,9 @@ var hash = require('object-hash');
 
 //http://localhost:3978/model/skis/set/kind/blau
 function getMinPrices(typ, alter, piste) {
+    if (!piste) {
+        piste = "*"
+    }
     var dataGETurl = process.env.ESKO_ENDPOINT_URL+"/model/skis/"+typ.toLowerCase()+"/"+alter.toLowerCase()+"/"+piste.toLowerCase();
     return rp(dataGETurl);
 }
@@ -1163,6 +1147,9 @@ function getMinPrices(typ, alter, piste) {
 function getMinPrices(typ, alter, piste, kategorie) {
     if (!kategorie) {
         kategorie = "*"
+    }
+    if (!piste) {
+        piste = "*"
     }
     var dataGETurl = process.env.ESKO_ENDPOINT_URL+"/model/skis/"+typ.toLowerCase()+"/"+alter.toLowerCase()+"/"+piste.toLowerCase()+"/"+kategorie.toLowerCase();
     return rp(dataGETurl);
@@ -1179,33 +1166,37 @@ const svg2png = require("svg2png");
 function setSVGRentalResult(data, cb) {
     var buffer = {text: ""};
     svg_start(buffer);
-    svg_table_start(buffer, {x:20, y:'2em'}, 16, [50, 70, 70, 70, 70]);
-    svg_box(buffer, 0, 0, buffer.table.totalWidth, buffer.table.totalWidth / 2);
+    svg_table_start(buffer, {x:20, y:'2em'}, 16, [80, 70, 70, 70, 70, 70]);
+    svg_box(buffer, 0, 0, buffer.table.totalWidth, buffer.table.totalWidth * 2 / 3);
 
-    svg_table_row(buffer, ["Fr.", "Piste", "Ski", "Schuhe", "Set"], true);
+    svg_table_row(buffer, ["Person", "Piste", "Ski", "Schuhe", "Stock", "Set"], true);
     var dataPromise = [];
     for (var i = 0; i < data.length; ++i) {
-        dataPromise.push(getMinPrices("ski", data[i].type, data[i].piste, data[i].schuhe));
-        dataPromise.push(getMinPrices("schuhe", data[i].type, data[i].piste, data[i].schuhe));
-        dataPromise.push(getMinPrices("set", data[i].type, data[i].piste, data[i].schuhe));
+        dataPromise.push(getMinPrices("ski", data[i].type, data[i].piste));
+        dataPromise.push(getMinPrices("schuhe", data[i].type, data[i].pisteSchuhe, data[i].schuhe));
+        dataPromise.push(getMinPrices("stock", data[i].type));
+        dataPromise.push(getMinPrices("set", data[i].type, data[i].piste));
     }
     Promise.all(dataPromise).then(values => {
         var t = 0;
-        var summeSki = summeSchuhe = summeSet = 0;
-        var summeSkiAb = summeSchuheAb = summeSetAb = false;
+        var summeSki = summeSchuhe = summeStock = summeSet = 0;
+        var summeSkiAb = summeSchuheAb = summeStockAb = summeSetAb = false;
         var empty = {tage_100: 0, tage_100_ab: false};
         for (var i = 0; i < values.length; ++i) {
             var ski=JSON.parse(values[i++]).data[0] || empty;
             var schuhe=JSON.parse(values[i++]).data[0] || empty;
+            var stock=JSON.parse(values[i++]).data[0] || empty;
             var set=JSON.parse(values[i]).data[0] || empty;
             var schuheText = "";
             if (data[t].schuhe) {
                 schuheText = " ("+data[t].schuhe+")";
             }
             svg_table_row(buffer, [
-                data[t].type.substr(0, 1), data[t].piste, 
+                data[t].type.substr(0, 1)+schuheText, 
+                data[t].piste, 
                 (ski.tage_100_ab ? "ab ":"")+ski.tage_100+".-", 
-                (schuhe.tage_100_ab ? "ab ":"")+schuhe.tage_100+".-"+schuheText,
+                (schuhe.tage_100_ab ? "ab ":"")+schuhe.tage_100+".-",
+                (stock.tage_100_ab ? "ab ":"")+stock.tage_100+".-",
                 (set.tage_100_ab ? "ab ":"")+set.tage_100+".-"
             ], false);
             summeSki += ski.tage_100;
@@ -1213,6 +1204,9 @@ function setSVGRentalResult(data, cb) {
             
             summeSchuhe += schuhe.tage_100;
             summeSchuheAb |= schuhe.tage_100_ab;
+
+            summeStock += stock.tage_100;
+            summeStockAb |= stock.tage_100_ab;
 
             summeSet += set.tage_100;
             summeSetAb |= set.tage_100_ab;
@@ -1222,12 +1216,13 @@ function setSVGRentalResult(data, cb) {
         svg_table_row(buffer, ["Total", "", 
             (summeSkiAb ? "ab ":"")+summeSki+".-", 
             (summeSchuheAb ? "ab ":"")+summeSchuhe+".-", 
+            (summeStockAb ? "ab ":"")+summeStock+".-", 
             (summeSetAb ? "ab ":"")+summeSet+".-"
         ], false);
         svg_table_end(buffer);
         svg_end(buffer);
         var uuid = hash(uuidV4());
-        var pngBuffer = svg2png.sync(new Buffer(buffer.text), { width: buffer.table.totalWidth, height: buffer.table.totalWidth / 2 });        
+        var pngBuffer = svg2png.sync(new Buffer(buffer.text), { width: buffer.table.totalWidth, height: buffer.table.totalWidth * 2 / 3 });        
         svgResultCache.set(uuid, { svg: buffer.text, width: buffer.table.totalWidth, pngBuffer: pngBuffer });
         console.log("cache size svgResultCache: "+svgResultCache.info().length+" of "+svgResultCache.info().capacity);
         cb(uuid, buffer.text);
