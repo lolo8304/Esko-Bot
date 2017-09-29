@@ -10,11 +10,11 @@
   "$.Ski.Tabelle.URL" : "https://s3.amazonaws.com/botsociety.prod.us/c4233475799177b663f03bf5e140dbc6a2ascreenshot%2020170331%20221454png.png",
 
   
-  "$.Intro.Willkommen": "Willkommen beim Sports-Village.ch Bot.\nMein Name ist Esko und ich helfe Dir bei der Auswahl der richtigen Wintersport Ausrüstung",
-  "$.Intro.Auswahl": "Wählen Sie unter folgenden Angeboten aus",
+  "$.Intro.Willkommen": "Willkommen beim\nMein Name ist Esko und ich helfe Dir bei der Auswahl der richtigen Wintersport Ausrüstung",
+  "$.Intro.Auswahl": "Wähle unter folgenden Angeboten aus",
   "Ski": "Ski",
-  "$.Ski.Personen": "Für welche Personen benötigst Du eine Miete?\n\nBsp: 2 Kinder und 2 Erwachsene\n\n1 Jugendlicher, 1 Erwachsener",
-  "$.Ski.BestätigungPersonen": "Ok - das bedeutet insgsamt %s Personen. Lass uns beginnen.",
+  "$.Ski.Personen": "Personen eintippen für die Jahresmiete?\n\nBsp: 2 Kinder und 2 Erwachsene\n\n1 Jugendlicher, 1 Erwachsener",
+  "$.Ski.BestätigungPersonen": "Ok - das bedeutet insgesamt %s Personen",
   "$.Person.Start": "Beginnen wir mit dem 1.%s",
   "$.Person.Piste": "Welche Piste fährt %s am liebsten?",
   "blau": "blau",
