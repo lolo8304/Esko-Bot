@@ -1325,7 +1325,7 @@ function setSVGRentalResult(user, data, cb) {
             sendBotMail(
                 "Esko Bot - Anfrage abgegeben", 
                 getBotRequestBodyText(angebot, pngUrl),
-                "lolo8304@gmail.com");
+                process.env.SMTP_TO_USER);
             cb(uuid, buffer.text);
         });
     });
