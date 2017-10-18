@@ -1,12 +1,12 @@
 {
   "$.Intro.Fehler": "Sorry - aber ich habe Dich nicht verstanden",
   "$.Intro.Begruessung": [
-    "Hallo %s... Mein Name ist Esko vom Sports-Village.ch und freue mich Dir helfen zu können.",
+    "Hallo %s... Mein Name ist Esko vom Sports-Village.ch und ich freue mich Dir zu helfen.",
     "Mit 'start' kannst Du immer wieder von vorne beginnen."
   ],
-  "$.Intro.Tschuess": "Tschüss - auf einer ander Mal. Dein Esko vom Sports-Village.ch",
+  "$.Intro.Tschuess": "Tschüss - auf ein anderes Mal. Dein Esko vom Sports-Village.ch",
   "$.Ski.Abbruch" : "Ok... wir beginnen nochmals von vorn. Bitte mit **start** beginnen",
-  "$.Ski.BestätigungPersonenFehler": "Leider konnte ich leider keine Zahlen erkennen. Versuch es nochmals.",
+  "$.Ski.BestätigungPersonenFehler": "Leider konnte ich keine Zahlen erkennen. Versuch es nochmals.",
 
   "$.Intro.Willkommen": "Mein Name ist Esko. Ich helfe Dir bei der Auswahl der Wintersport Ausrüstung",
   "$.Intro.Auswahl": "Wähle aus folgenden Angeboten",
@@ -63,9 +63,9 @@
   "$.Person.Piste.Choices": "Aktion|blau|rot|schwarz",
   "$.Person.Piste.Kinder.Choices": "Aktion|blau|rot",
   "$.Person.Piste.Jugendlicher.Choices": "Aktion|blau|rot|schwarz",
-  "$.Langlauf.Fehler": "Für Langlauf besuche uns in unseren Laden, damit wir das Angebot auf Eure persönlichen Anforderungen zuschneiden können.",
+  "$.Langlauf.Fehler": "Für Langlauf besuche uns in unserem Laden, damit wir Dir ein persönliches Angebot zuschneiden können.",
   "$.Resultat.BestenDankDennoch": "Dennoch besten Dank - wir freuen uns auf Deinen Besuch bei uns im Sports-Village.ch in Uster oder auf unserer WebSeite http://sports-village.ch\"",
-  "$.Snowboard.Fehler": "Für Snowboard besuche uns in unseren Laden, damit wir das Angebot auf Eure persönlichen Anforderungen zuschneiden können.",
+  "$.Snowboard.Fehler": "Für Snowboard besuche uns in unserem Laden, damit wir Dir ein persönliches Angebot zuschneiden können.",
   "$.Intro.Auswahl.Choices": "Ski|Langlauf|Snowboard",
   "final": ""
 }
