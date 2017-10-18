@@ -160,6 +160,43 @@ if (!process.env.DB_APP_USER) {
 var db = monk(dbURL);
 console.log("mongodb connected with URL="+dbURL);
 
+//===================
+// send mail
+//===================
+
+var nodemailer = require('nodemailer');
+
+var transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT,
+  secure: false,
+  requireTLS: false,
+  auth: {
+    user: process.env.SMTP_AUTH_USER,
+    pass: process.env.SMTP_AUTH_PWD
+  }
+});
+
+function sendBotMail(subject, body, TO) {
+    var mailOptions = {
+        from: process.env.SMTP_FROM_USER,
+        to: TO,
+        bcc: process.env.SMTP_CC_USER,
+        subject: subject,
+        text: body
+    };
+    
+    transporter.sendMail(mailOptions, function(error, info){
+    if (error) {
+        console.log(error);
+    } else {
+        console.log('Email sent: ' + info.response);
+    }
+    });
+    
+}
+
+
 //=========================================================
 // start table image 
 //=========================================================
@@ -1228,6 +1265,13 @@ function setSVGRentalResult(user, data, cb) {
                 (stock.tage_100_ab ? "ab ":"")+stock.tage_100+".-",
                 (set.tage_100_ab ? "ab ":"")+set.tage_100+".-"
             ], false);
+            data[t].preise = {
+                ski: ski.tage_100,
+                schuhe: schuhe.tage_100,
+                stock: stock.tage_100,
+                set: set.tage_100
+            }
+
             summeSki += ski.tage_100;
             summeSkiAb |= ski.tage_100_ab;
             
@@ -1240,6 +1284,13 @@ function setSVGRentalResult(user, data, cb) {
             summeSet += set.tage_100;
             summeSetAb |= set.tage_100_ab;
             t++;
+        }
+
+        var preise = {
+            ski: summeSki,
+            schuhe: summeSchuhe,
+            stock: summeStock,
+            set: summeSet
         }
 
         svg_table_row(buffer, ["", "", "", "", "", ""], false);
@@ -1266,13 +1317,36 @@ function setSVGRentalResult(user, data, cb) {
         svg_table_end(buffer);
         svg_end(buffer);
         var pngBuffer = svg2png.sync(new Buffer(buffer.text), { width: buffer.table.totalWidth, height: buffer.table.totalWidth /2 });
-        var angebot = { user: user, data: data, svg: buffer.text, width: buffer.table.totalWidth, pngBase64Encoded: pngBuffer.toString('base64') };
+        var angebot = { date: new Date(), user: user, data: data, preise: preise, svg: buffer.text, width: buffer.table.totalWidth, pngBase64Encoded: pngBuffer.toString('base64') };
         saveObjectToDB(db, "angebote", angebot, function(error, uuid) {
             svgResultCache.set(uuid, angebot);
+            var pngUrl = process.env.ESKO_ENDPOINT_URL+"/miete.png?uuid="+uuid;
             console.log("cache size svgResultCache: "+svgResultCache.info().length+" of "+svgResultCache.info().capacity);
+            sendBotMail(
+                "Esko Bot - Anfrage abgegeben", 
+                getBotRequestBodyText(angebot, pngUrl),
+                "lolo8304@gmail.com");
             cb(uuid, buffer.text);
         });
     });
+}
+
+function getBotRequestBodyText(angebot, url) {
+    var contents = fs.readFileSync('./locale/de/email-template.html', 'utf8');
+    // data.preise = {
+    //     ski, schuhe, stock, set
+    //}
+    var preise = angebot.preise;
+    contents = contents.replace("$data.ski", preise.ski);
+    contents = contents.replace("$data.schuhe", preise.schuhe);
+    contents = contents.replace("$data.stock", preise.stock);
+    contents = contents.replace("$data.set", preise.set);
+    contents = contents.replace("$data.png", url);
+    contents = contents.replace("$user.id", angebot.user.id);
+    contents = contents.replace("$user.name", angebot.user.name);
+    contents = contents.replace("$user.name", angebot.user.name);
+    contents = contents.replace("$date", angebot.date.toString());
+    return contents;
 }
 
 
