@@ -72,14 +72,24 @@ bot.on('conversationUpdate', function (message) {
       if (message.membersAdded) {
           message.membersAdded.forEach(function (identity) {
               if (identity.id != message.address.bot.id) {
-                  var name = identity.name ? identity.name : "zämä";
-                  if (message.address.conversation.isGroup) {
+                    var name = identity.name ? identity.name : "zämä";
+                    if (message.address.conversation.isGroup) {
                     name = "zämä";
-                  }
-                  var reply = new builder.Message()
-                          .address(message.address)
-                          .text("Hallo %s. Mein Name ist **Esko** vom **Sports-Village.ch** und freue mich Euch helfen zu können!\nMit **'start'** kannst Du immer wieder von vorne beginnen.", name);
-                  bot.send(reply);
+                    }
+
+                   /* use no $ variable because session is not available */
+                    var cardImage = builder.CardImage.create(null, process.env.ESKO_ENDPOINT_URL+"/images/esko.bot.png");
+                    var card = new builder.HeroCard()
+                        .title("Esko-Bot")
+                        .text("Mein Name ist Esko. Ich helfe Dir bei der Auswahl der Wintersport Ausrüstung. Mit **start** kannst Du beginnen")
+                        .images([
+                            cardImage
+                        ]);
+                    var msg = new builder.Message()
+                        .address(message.address)
+                        .addAttachment(card);
+                    bot.send(msg);
+                  return;
               }
           });
       }
@@ -88,25 +98,14 @@ bot.on('conversationUpdate', function (message) {
       if (message.membersRemoved) {
           message.membersRemoved.forEach(function (identity) {
               if (identity.id === message.address.bot.id) {
-                  var reply = new builder.Message()
+                   /* use no $ variable because session is not available */
+                   var reply = new builder.Message()
                       .address(message.address)
-                      .text("Tschüss - auf einer ander Mal. Dein Esko vom Sports-Village.ch");
+                      .text("Tschüss - auf ein anderes Mal. Dein Esko vom Sports-Village.ch");
                   bot.send(reply);
               }
           });
       }
-});
-
-bot.on('contactRelationUpdate', function (message) {
-    if (message.action === 'add') {
-        var name = message.user ? message.user.name : null;
-        var reply = new builder.Message()
-                .address(message.address)
-                .text("Hallo %s... Mein Name ist Esko vom Sports-Village.ch und freue mich Dir helfen zu können. Mit 'start' kannst Du immer wieder von vorne beginnen.", name || 'there');
-        bot.send(reply);
-    } else {
-        // delete their data
-    }
 });
 
 bot.on('deleteUserData', function (message) {
@@ -271,8 +270,6 @@ function svg_table_end(buffer) {
 //=========================================================
 // start table image 
 //=========================================================
-
-
 
 // Make our db accessible to our router
 server.use(function(req,res,next){
@@ -773,7 +770,7 @@ server.get('/images/:name', function (req, res, next) {
         return handleError(res,
             new RestApiError("400", 'image name must be specified'));
     }
-    if (imageName.indexOf("..") >= 0 || imageName.indexOf("/") >= 0) {
+    if (imageName.indexOf("..") >= 0 || imageName.indexOf("/") >= 0 || imageName.indexOf("$") >= 0 || imageName.indexOf("~") >= 0) {
         return handleError(res,
             new RestApiError("400", 'invalid image name - only "name.ext" allowed'));
     }
@@ -801,12 +798,14 @@ server.get('/images/:name', function (req, res, next) {
 
 
 intents.onDefault(
- builder.DialogAction.send("$.Intro.Fehler")
+    builder.DialogAction.endDialog()
+    //builder.DialogAction.send("$.Intro.Fehler")
 );
 
 bot.dialog('/Intro', [
   function (session, args, next) {
         session.preferredLocale("de");
+        /* move hero to update
         var card = new builder.HeroCard(session)
             .title("Esko-Bot")
             .text("$.Intro.Willkommen")
@@ -815,27 +814,29 @@ bot.dialog('/Intro', [
             ]);
         var msg = new builder.Message(session).addAttachment(card);
         session.send(msg);
-        session.sendBatch();
+        */
+        session.send("Lass uns starten.")
         choices(session, "$.Intro.Auswahl", "$.Intro.Auswahl.Choices");
-  },
+        session.sendBatch();
+    },
   function (session, results, next) {
     if (results.response.entity === "Ski") {
       session.beginDialog("/Ski");
     }
     if (results.response.entity === "Langlauf") {
       session.send("$.Langlauf.Fehler");
-      next()
+      //session.send("$.Resultat.BestenDankDennoch");
+      session.endDialog();
     }
     if (results.response.entity === "Snowboard") {
       session.send("$.Snowboard.Fehler");
-      next()
+      //session.send("$.Resultat.BestenDankDennoch");
+      session.endDialog();
     }
   },
   function (session, results, next) {
     if (results.response) {
       session.send("$.Resultat.KommInShop");
-    } else {
-      session.send("$.Resultat.BestenDankDennoch");
     }
     session.endDialog();
   }
