@@ -63,9 +63,9 @@
   "$.Person.Piste.Choices": "Aktion|blau|rot|schwarz",
   "$.Person.Piste.Kinder.Choices": "Aktion|blau|rot",
   "$.Person.Piste.Jugendlicher.Choices": "Aktion|blau|rot|schwarz",
-  "$.Langlauf.Fehler": "Für Langlauf besuche uns in unserem Laden, damit wir Dir ein persönliches Angebot zuschneiden können.",
+  "$.Langlauf.Fehler": "Für Langlauf haben leider wir noch keinen Roboter. Du kannst mir trotzdem eine Chat-Nachricht hinterlassen. Dein Esko",
   "$.Resultat.BestenDankDennoch": "Dennoch besten Dank - wir freuen uns auf Deinen Besuch bei uns im Sports-Village.ch in Uster oder auf unserer WebSeite http://sports-village.ch\"",
-  "$.Snowboard.Fehler": "Für Snowboard besuche uns in unserem Laden, damit wir Dir ein persönliches Angebot zuschneiden können.",
+  "$.Snowboard.Fehler": "Für Snowboard haben leider wir noch keinen Roboter. Du kannst mir trotzdem eine Chat-Nachricht hinterlassen. Dein Esko",
   "$.Intro.Auswahl.Choices": "Ski|Langlauf|Snowboard",
   "final": ""
 }
