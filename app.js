@@ -1231,6 +1231,19 @@ function getObjectFromDB(db, collectionName, uuid, callback_UUID) {
     });
 }
 
+function isTestUserId(currentUserId) {
+    var testusers = process.env.TEST_USER_IDS.split(",");
+    for (var userId in testusers) {
+        if (testusers.hasOwnProperty(userId)) {
+            var userId = testusers[userId];
+            if (userId.trim() == currentUserId) {
+                return true
+            }
+        }
+    }
+    return false;
+}
+
 function setSVGRentalResult(user, data, cb) {
     var buffer = {text: ""};
     svg_start(buffer);
@@ -1323,10 +1336,12 @@ function setSVGRentalResult(user, data, cb) {
             svgResultCache.set(uuid, angebot);
             var pngUrl = process.env.ESKO_ENDPOINT_URL+"/miete.png?uuid="+uuid;
             console.log("cache size svgResultCache: "+svgResultCache.info().length+" of "+svgResultCache.info().capacity);
-            sendBotMail(
-                "Esko Bot - Anfrage abgegeben", 
-                getBotRequestBodyText(angebot, pngUrl),
-                process.env.SMTP_TO_USER);
+            if (!isTestUserId(angebot.user.id)) {
+                sendBotMail(
+                    "Esko Bot - Anfrage abgegeben", 
+                    getBotRequestBodyText(angebot, pngUrl),
+                    process.env.SMTP_TO_USER);
+            }
             cb(uuid, buffer.text);
         });
     });
