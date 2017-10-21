@@ -9,13 +9,20 @@ var sprintf = require('sprintf-js');
 const uuidV4 = require('uuid/v4');
 var StringBuffer = require('string-buffer');
 var util = require('util');
+var fs = require('fs');
 
 require('dotenv').config();
 var _ = require('lodash');
 var moment = require('moment');
 
+var localeTexts = JSON.parse(fs.readFileSync("./locale/de/index.json", "utf8"));
+
 function getT(session, text) {
-    return session.localizer.gettext(session.preferredLocale(), text)
+    if (session) {
+        return session.localizer.gettext(session.preferredLocale(), text)
+    } else {
+        return localeTexts[text];
+    }
 }
 function getTT(session, text, ...args) {
     return sprintf.sprintf(getT(session, text), args)
@@ -81,7 +88,7 @@ bot.on('conversationUpdate', function (message) {
                     var cardImage = builder.CardImage.create(null, process.env.ESKO_ENDPOINT_URL+"/images/esko.bot.png");
                     var card = new builder.HeroCard()
                         .title("Esko-Bot")
-                        .text("Mein Name ist Esko. Ich helfe Dir bei der Auswahl der Wintersport Ausrüstung. Mit **start** kannst Du beginnen")
+                        .text(getT(null, "$.Intro.Willkommen"))
                         .images([
                             cardImage
                         ]);
@@ -101,7 +108,7 @@ bot.on('conversationUpdate', function (message) {
                    /* use no $ variable because session is not available */
                    var reply = new builder.Message()
                       .address(message.address)
-                      .text("Tschüss - auf ein anderes Mal. Dein Esko vom Sports-Village.ch");
+                      .text(getT(null, "$.Intro.Tschuess"));
                   bot.send(reply);
               }
           });
@@ -290,7 +297,7 @@ server.use(function(req,res,next){
     next();
 });
 
-var fs = require('fs');
+
 server.get('/swagger.local.yaml', function (req, res, next) {
   var contents = fs.readFileSync('./swagger/swagger.local.yaml', 'utf8');
   res.setHeader('content-type', 'text/yaml');
@@ -805,16 +812,6 @@ intents.onDefault(
 bot.dialog('/Intro', [
   function (session, args, next) {
         session.preferredLocale("de");
-        /* move hero to update
-        var card = new builder.HeroCard(session)
-            .title("Esko-Bot")
-            .text("$.Intro.Willkommen")
-            .images([
-                 builder.CardImage.create(session, process.env.ESKO_ENDPOINT_URL+"/images/esko.bot.png")
-            ]);
-        var msg = new builder.Message(session).addAttachment(card);
-        session.send(msg);
-        */
         session.send("Lass uns starten.")
         choices(session, "$.Intro.Auswahl", "$.Intro.Auswahl.Choices");
         session.sendBatch();

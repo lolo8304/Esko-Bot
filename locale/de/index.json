@@ -1,14 +1,10 @@
 {
   "$.Intro.Fehler": "Sorry - aber ich habe Dich nicht verstanden",
-  "$.Intro.Begruessung": [
-    "Hallo %s... Mein Name ist Esko vom Sports-Village.ch und ich freue mich Dir zu helfen.",
-    "Mit 'start' kannst Du immer wieder von vorne beginnen."
-  ],
   "$.Intro.Tschuess": "Tschüss - auf ein anderes Mal. Dein Esko vom Sports-Village.ch",
   "$.Ski.Abbruch" : "Ok... wir beginnen nochmals von vorn. Bitte mit **start** beginnen",
   "$.Ski.BestätigungPersonenFehler": "Leider konnte ich keine Zahlen erkennen. Versuch es nochmals.",
 
-  "$.Intro.Willkommen": "Mein Name ist Esko. Ich helfe Dir bei der Auswahl der Wintersport Ausrüstung",
+  "$.Intro.Willkommen": "Mein Name ist Esko. Mit **start** helfe Dir bei der Auswahl der Wintersport Ausrüstung. [Datenschutz](http://sports-village.ch/impressum)",
   "$.Intro.Auswahl": "Wähle aus folgenden Angeboten",
   "Ski": "Ski",
   "$.Ski.Personen": "Anzahl und Person eintippen für die Miete?\n\nBsp: 2 Kinder und 2 Erwachsene\n\n1 Jugendlicher, 1 Erwachsener",
