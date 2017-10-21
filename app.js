@@ -1330,18 +1330,18 @@ function setSVGRentalResult(user, data, cb) {
     
         svg_table_end(buffer);
         svg_end(buffer);
+        var isTestUser = isTestUserId(user.id);
         var pngBuffer = svg2png.sync(new Buffer(buffer.text), { width: buffer.table.totalWidth, height: buffer.table.totalWidth /2 });
-        var angebot = { date: new Date(), user: user, data: data, preise: preise, svg: buffer.text, width: buffer.table.totalWidth, pngBase64Encoded: pngBuffer.toString('base64') };
+        var angebot = { date: new Date(), test: isTestUser, user: user, data: data, preise: preise, svg: buffer.text, width: buffer.table.totalWidth, pngBase64Encoded: pngBuffer.toString('base64') };
         saveObjectToDB(db, "angebote", angebot, function(error, uuid) {
             svgResultCache.set(uuid, angebot);
             var pngUrl = process.env.ESKO_ENDPOINT_URL+"/miete.png?uuid="+uuid;
             console.log("cache size svgResultCache: "+svgResultCache.info().length+" of "+svgResultCache.info().capacity);
-            if (!isTestUserId(angebot.user.id)) {
-                sendBotMail(
-                    "Esko Bot - Anfrage abgegeben", 
-                    getBotRequestBodyText(angebot, pngUrl),
-                    process.env.SMTP_TO_USER);
-            }
+            sendBotMail(
+                "Esko Bot - Angebot abgegeben - " + angebot.user.name + (angebot.test ? " - Test" : ""), 
+                getBotRequestBodyText(angebot, pngUrl),
+                (angebot.test ? process.env.SMTP_TO_USER_TEST : process.env.SMTP_TO_USER)
+            );
             cb(uuid, buffer.text);
         });
     });
@@ -1360,8 +1360,9 @@ function getBotRequestBodyText(angebot, url) {
     contents = contents.replace("$data.png", url);
     contents = contents.replace("$user.id", angebot.user.id);
     contents = contents.replace("$user.name", angebot.user.name);
-    contents = contents.replace("$user.name", angebot.user.name);
     contents = contents.replace("$date", angebot.date.toString());
+    contents = contents.replace("$data.count", angebot.data.length);
+    
     return contents;
 }
 
