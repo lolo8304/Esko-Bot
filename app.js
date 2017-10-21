@@ -77,28 +77,18 @@ bot.on('conversationUpdate', function (message) {
    // Check for group conversations
       // Send a hello message when bot is added
       if (message.membersAdded) {
-          message.membersAdded.forEach(function (identity) {
-              if (identity.id != message.address.bot.id) {
-                    var name = identity.name ? identity.name : "zämä";
-                    if (message.address.conversation.isGroup) {
-                    name = "zämä";
-                    }
-
-                   /* use no $ variable because session is not available */
-                    var cardImage = builder.CardImage.create(null, process.env.ESKO_ENDPOINT_URL+"/images/esko.bot.png");
-                    var card = new builder.HeroCard()
-                        .title("Esko-Bot")
-                        .text(getT(null, "$.Intro.Willkommen"))
-                        .images([
-                            cardImage
-                        ]);
-                    var msg = new builder.Message()
-                        .address(message.address)
-                        .addAttachment(card);
-                    bot.send(msg);
-                  return;
-              }
-          });
+        /* use no $ variable because session is not available */
+        var cardImage = builder.CardImage.create(null, process.env.ESKO_ENDPOINT_URL+"/images/esko.bot.png");
+        var card = new builder.HeroCard()
+            .title("Esko-Bot")
+            .text(getT(null, "$.Intro.Willkommen"))
+            .images([
+                cardImage
+            ]);
+        var msg = new builder.Message()
+            .address(message.address)
+            .addAttachment(card);
+        bot.send(msg);
       }
 
       // Send a goodbye message when bot is removed
