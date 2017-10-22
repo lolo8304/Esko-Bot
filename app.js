@@ -74,13 +74,47 @@ const ENTITIES = {
 //=========================================================
 
 bot.on('conversationUpdate', function (message) {
+
    // Check for group conversations
-      // Send a hello message when bot is added
-      if (message.membersAdded) {
+    if (message.address.conversation.isGroup) {
+        // Send a hello message when bot is added
+        if (message.membersAdded) {
+            /* use no $ variable because session is not available */
+            var cardImage = builder.CardImage.create(null, process.env.ESKO_ENDPOINT_URL+"/images/esko.bot.png");
+            var card = new builder.HeroCard()
+                .title(getT(null, "$.Intro.Title"))
+                .text(getT(null, "$.Intro.Willkommen"))
+                .images([
+                    cardImage
+                ]);
+            var msg = new builder.Message()
+                .address(message.address)
+                .addAttachment(card);
+            bot.send(msg);
+        }
+
+        // Send a goodbye message when bot is removed
+        if (message.membersRemoved) {
+            message.membersRemoved.forEach(function (identity) {
+                if (identity.id === message.address.bot.id) {
+                    /* use no $ variable because session is not available */
+                    var reply = new builder.Message()
+                        .address(message.address)
+                        .text(getT(null, "$.Intro.Tschuess"));
+                    bot.send(reply);
+                }
+            });
+        }
+    }
+});
+
+bot.on('contactRelationUpdate', function (message) {
+    if (message.action === 'add') {
+        var name = message.user ? message.user.name : null;
         /* use no $ variable because session is not available */
         var cardImage = builder.CardImage.create(null, process.env.ESKO_ENDPOINT_URL+"/images/esko.bot.png");
         var card = new builder.HeroCard()
-            .title("Esko-Bot")
+            .title(getT(null, "$.Intro.Title"))
             .text(getT(null, "$.Intro.Willkommen"))
             .images([
                 cardImage
@@ -89,20 +123,10 @@ bot.on('conversationUpdate', function (message) {
             .address(message.address)
             .addAttachment(card);
         bot.send(msg);
-      }
-
-      // Send a goodbye message when bot is removed
-      if (message.membersRemoved) {
-          message.membersRemoved.forEach(function (identity) {
-              if (identity.id === message.address.bot.id) {
-                   /* use no $ variable because session is not available */
-                   var reply = new builder.Message()
-                      .address(message.address)
-                      .text(getT(null, "$.Intro.Tschuess"));
-                  bot.send(reply);
-              }
-          });
-      }
+        
+    } else {
+        // delete their data
+    }
 });
 
 bot.on('deleteUserData', function (message) {
@@ -852,24 +876,42 @@ bot.dialog('/Ski', [
 ]);
 
 
-function angebotTitlePersonen(angebot) {
-  var buf = "";
-  if (angebot.counts.countErwachsene > 1) {
-    buf += angebot.counts.countErwachsene+" Erwachsene ";
-  } else if (angebot.counts.countErwachsene == 1) {
-    buf += angebot.counts.countErwachsene+" Erwachsener ";
-  }
-  if (angebot.counts.countKinder > 1) {
-    buf += angebot.counts.countKinder+" Kinder ";
-  } else if (angebot.counts.countKinder == 1) {
-    buf += angebot.counts.countKinder+" Kind ";
-  }
-  if (angebot.counts.countJugendliche > 1) {
-   buf += angebot.counts.countJugendliche+" Jugendliche";
-  } else if (angebot.counts.countJugendliche == 1) {
-   buf += angebot.counts.countJugendliche+" Jugendlicher";
-  }
-  return buf;
+function angebotTitlePersonen(angebot, data) {
+    var nofK = 0
+    var nofJ = 0
+    var nofE = 0
+    for (var index = 0; index < data.length; index++) {
+        var person = data[index];
+        if (person.type == "Erwachsener") {
+            nofE++
+        }
+        if (person.type == "Kind") {
+            nofK++            
+        }
+        if (person.type == "Jugendlicher") {
+            nofJ++
+        }
+    }
+    var text = "";
+    if (nofK == 1) {
+        text += " 1 Kind"
+    }
+    if (nofK > 1) {
+        text += " "+nofK+" Kinder"
+    }
+    if (nofJ == 1) {
+        text += " 1 Jugendlicher"
+    }
+    if (nofJ > 1) {
+        text += " "+nofJ+" Jugendliche"
+    }
+    if (nofE == 1) {
+        text += " 1 Erwachsener"
+    }
+    if (nofE > 1) {
+        text += " "+nofE+" Erwachsene"
+    }
+    return text;
 }
 
 bot.dialog('/Ski/Angebot', [
@@ -883,11 +925,11 @@ bot.dialog('/Ski/Angebot', [
 //        session.send("Danke - wir haben alle Information erhalten und berechnen nun das Angebot");
         session.sendTyping()
         session.sendBatch();
-        setSVGRentalResult(session.message.address.user, data, function (uuid, text) {
+        setSVGRentalResult(session.message.address.user, data, function (uuid, data, text) {
             var link = process.env.ESKO_ENDPOINT_URL+"/miete.png?uuid="+uuid;
             var card = new builder.HeroCard(session)
                 .title("$.Resultat.Titel", session.userData.angebot.personen.length)
-                .text(angebotTitlePersonen(session.userData.angebot))
+                .text(angebotTitlePersonen(session.userData.angebot, data))
                 .images([
                     builder.CardImage.create(session, link),
                 ])
@@ -1032,6 +1074,9 @@ bot.dialog('/Ski/Kind', [
         if (results.response) {
             session.dialogData.person.piste = results.response.entity;
             session.dialogData.person.pisteSchuhe = session.dialogData.person.piste;
+            if (session.dialogData.person.realType == "Jugendlicher" && session.dialogData.person.piste == "Aktion") {
+                session.dialogData.person.pisteSchuhe = "blau";
+            }
             session.userData.angebot.todoCount.countKinder--;
             session.userData.angebot.todoCount.countTotal--;
             session.endDialogWithResult({response: session.dialogData.person});
@@ -1329,7 +1374,7 @@ function setSVGRentalResult(user, data, cb) {
                 getBotRequestBodyText(angebot, pngUrl),
                 (angebot.test ? process.env.SMTP_TO_USER_TEST : process.env.SMTP_TO_USER)
             );
-            cb(uuid, buffer.text);
+            cb(uuid, data, buffer.text);
         });
     });
 }
