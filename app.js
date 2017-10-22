@@ -74,9 +74,10 @@ const ENTITIES = {
 //=========================================================
 
 bot.on('conversationUpdate', function (message) {
-
+    console.log(">> conversationUpdate")
    // Check for group conversations
     if (message.address.conversation.isGroup) {
+        console.log(">> conversationUpdate - isGroup")
         // Send a hello message when bot is added
         if (message.membersAdded) {
             /* use no $ variable because session is not available */
@@ -109,7 +110,9 @@ bot.on('conversationUpdate', function (message) {
 });
 
 bot.on('contactRelationUpdate', function (message) {
+    console.log(">> contactRelationUpdate")
     if (message.action === 'add') {
+        console.log(">> contactRelationUpdate - add")
         var name = message.user ? message.user.name : null;
         /* use no $ variable because session is not available */
         var cardImage = builder.CardImage.create(null, process.env.ESKO_ENDPOINT_URL+"/images/esko.bot.png");
@@ -125,6 +128,7 @@ bot.on('contactRelationUpdate', function (message) {
         bot.send(msg);
         
     } else {
+        console.log(">> contactRelationUpdate - "+message.action)
         // delete their data
     }
 });
