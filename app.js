@@ -151,7 +151,6 @@ var intents = new builder.IntentDialog({ recognizers: [recognizer] });
 bot.dialog('/', intents
     .matches('help', '/Hilfe')
     .matches('intro', '/Intro')
-    .matches('personen', '/Personen')
     .matches('GetStarted', '/GetStarted')
 );
 
