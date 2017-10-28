@@ -137,6 +137,8 @@ bot.on('deleteUserData', function (message) {
     // User asked to delete their data
 });
 
+
+
 //=========================================================
 // LUIS initialization
 //=========================================================
@@ -150,6 +152,7 @@ bot.dialog('/', intents
     .matches('help', '/Hilfe')
     .matches('intro', '/Intro')
     .matches('personen', '/Personen')
+    .matches('GetStarted', '/GetStarted')
 );
 
 
@@ -826,6 +829,24 @@ intents.onDefault(
     builder.DialogAction.endDialog()
     //builder.DialogAction.send("$.Intro.Fehler")
 );
+
+bot.dialog('/GetStarted', [
+    function (session, args, next) {
+          session.preferredLocale("de");
+          var cardImage = builder.CardImage.create(null, process.env.ESKO_ENDPOINT_URL+"/images/esko.bot.png");
+          var card = new builder.HeroCard(session)
+              .title(getT(session, "$.Intro.Title"))
+              .text(getT(session, "$.Intro.Willkommen"))
+              .images([
+                  cardImage
+              ]);
+          var msg = new builder.Message()
+              .address(session.message.address)
+              .addAttachment(card);
+          session.send(msg);
+          session.endDialog();
+    }
+  ]);
 
 bot.dialog('/Intro', [
   function (session, args, next) {
