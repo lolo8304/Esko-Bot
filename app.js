@@ -149,7 +149,6 @@ var model = process.env.MICROSOFT_LUIS_MODEL;
 var recognizer = new builder.LuisRecognizer(model);
 var intents = new builder.IntentDialog({ recognizers: [recognizer] });
 bot.dialog('/', intents
-    .matches('help', '/Hilfe')
     .matches('intro', '/Intro')
     .matches('GetStarted', '/GetStarted')
 );
@@ -868,7 +867,11 @@ bot.dialog('/Intro', [
       //session.send("$.Resultat.BestenDankDennoch");
       session.endDialog();
     }
-  },
+    if (results.response.entity === "andere") {
+        session.send("$.andere.Fehler");
+        session.endDialog();
+      }
+    },
   function (session, results, next) {
     if (results.response) {
       session.send("$.Resultat.KommInShop");

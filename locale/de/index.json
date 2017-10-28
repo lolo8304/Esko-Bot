@@ -5,7 +5,7 @@
   "$.Ski.BestätigungPersonenFehler": "Leider konnte ich keine Zahlen erkennen. Versuch es nochmals.",
 
   "$.Intro.Title": "Mein Name ist Esko",  
-  "$.Intro.Willkommen": "Mit 'start' helfe ich Dir bei der Auswahl der Wintersport Ausrüstung. [Datenschutz](http://sports-village.ch/impressum)",
+  "$.Intro.Willkommen": "Tipp 'start' und ich helfe Dir bei der Auswahl der Wintersport Ausrüstung. [Datenschutz](http://sports-village.ch/impressum)",
   "$.Intro.Auswahl": "Wähle aus folgenden Angeboten",
   "Ski": "Ski",
   "$.Ski.Personen": "Anzahl und Person eintippen für die Miete?\n\nBsp: 2 Kinder und 2 Erwachsene\n\n1 Jugendlicher, 1 Erwachsener",
@@ -25,7 +25,7 @@
   
   "$.Resultat.WarteRechnen": "Danke. Ich rechne für Dich nun ein Angebot für die %s Person(en).",
   "$.Resultat.Titel": "Vorschläge der Jahresmiete für %s Person(en)",
-  "$.Resultat.KommInShop": "Nimm dieses Angebot mit zu uns in den Laden, damit wir zusammen die beste Wahl für Dich treffen können. Mit 'start' kannst Du auch ein weiteres Angebot rechnen",
+  "$.Resultat.KommInShop": "Nimm dieses Angebot mit zu uns in den Laden, damit wir zusammen die beste Wahl für Dich treffen können. Tippe 'start' für ein weiteres Angebot",
   "$.Resultat.Oeffnungszeiten": "Wir sind von Mo - So, 10-20h in Uster für Dich.",
   "Nein, bin happy": "Nein, bin happy",
   "$.Resultat.BestenDank": "Besten Dank - wir freuen uns auf Deinen Besuch bei uns im Sports-Village.ch in Uster oder auf unserer WebSeite http://sports-village.ch",
@@ -63,6 +63,7 @@
   "$.Langlauf.Fehler": "Für Langlauf haben leider wir noch keinen Roboter. Du kannst mir trotzdem eine Chat-Nachricht hinterlassen. Dein Esko",
   "$.Resultat.BestenDankDennoch": "Dennoch besten Dank - wir freuen uns auf Deinen Besuch bei uns im Sports-Village.ch in Uster oder auf unserer WebSeite http://sports-village.ch\"",
   "$.Snowboard.Fehler": "Für Snowboard haben leider wir noch keinen Roboter. Du kannst mir trotzdem eine Chat-Nachricht hinterlassen. Dein Esko",
-  "$.Intro.Auswahl.Choices": "Ski|Langlauf|Snowboard",
+  "$.andere.Fehler": "Hinterlass mir einfach eine Chat-Nachricht und ich melde mich. Dein Esko",
+  "$.Intro.Auswahl.Choices": "Ski|Langlauf|Snowboard|andere",
   "final": ""
 }
