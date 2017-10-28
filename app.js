@@ -1314,7 +1314,7 @@ function setSVGRentalResult(user, data, cb) {
         dataPromise.push(getMinPrices("ski", data[i].type, data[i].piste));
         dataPromise.push(getMinPrices("schuhe", data[i].type, data[i].pisteSchuhe, data[i].schuhe));
         dataPromise.push(getMinPrices("stock", data[i].type));
-        dataPromise.push(getMinPrices("set", data[i].type, data[i].piste));
+        dataPromise.push(getMinPrices("set", data[i].type, data[i].pisteSchuhe, data[i].schuhe));
     }
     Promise.all(dataPromise).then(values => {
         var t = 0;
@@ -1374,14 +1374,10 @@ function setSVGRentalResult(user, data, cb) {
             (summeStockAb ? "ab ":"")+summeStock+".-", 
             (summeSetAb ? "ab ":"")+summeSet+".-"
         ], false);
-        var first = true;
+        svg_table_row(buffer, ["", "", "", "", "", ""], false);                    
+        svg_table_row(buffer, ["Jahresmiete bis 5.11. 10% Rabatt", "", "", "", "", ""], false);                    
         for (var t = 0; t < data.length; t++) {
             if (data[t].schuhe) {
-                if (first) {
-                    svg_table_row(buffer, ["", "", "", "", "", ""], false);                    
-                    svg_table_row(buffer, ["Zusatzinformationen:", "", "", "", "", ""], false);                    
-                    first = false;
-                }
                 var schuheText = (t+1)+".Kind Schuhe "+data[t].schuhe;
                 svg_table_row(buffer, [schuheText, "", "", ""], false);
             }
