@@ -6,7 +6,7 @@
 
   "$.Intro.Title": "Mein Name ist Esko",  
   "$.Intro.Willkommen": "Tipp 'start' und ich helfe Dir bei der Auswahl der Wintersport Ausrüstung. [Datenschutz](http://sports-village.ch/impressum)",
-  "$.Intro.Auswahl": "Wähle aus folgenden Angeboten. bei Aktion ist das preisgünstigste Angebot gemeint, solange Vorrat.",
+  "$.Intro.Auswahl": "Wähle aus folgenden Angeboten. Bei ‚Aktion‘ ist das immer preisgünstigste Angebot gemeint, solange Vorrat.",
   "Ski": "Ski",
   "$.Ski.Personen": "Anzahl und Person eintippen für die Miete?\n\nBsp: 2 Kinder und 2 Erwachsene\n\n1 Jugendlicher, 1 Erwachsener",
   "$.Ski.BestätigungPersonen": "Ok - das bedeutet insgesamt %s Person(en)",
