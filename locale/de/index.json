@@ -6,7 +6,7 @@
 
   "$.Intro.Title": "Mein Name ist Esko",  
   "$.Intro.Willkommen": "Tipp 'start' und ich helfe Dir bei der Auswahl der Wintersport Ausrüstung. [Datenschutz](http://sports-village.ch/impressum)",
-  "$.Intro.Auswahl": "Wähle aus folgenden Angeboten",
+  "$.Intro.Auswahl": "Wähle aus folgenden Angeboten. Bei ‚Aktion‘ ist das immer preisgünstigste Angebot gemeint, solange Vorrat.",
   "Ski": "Ski",
   "$.Ski.Personen": "Anzahl und Person eintippen für die Miete?\n\nBsp: 2 Kinder und 2 Erwachsene\n\n1 Jugendlicher, 1 Erwachsener",
   "$.Ski.BestätigungPersonen": "Ok - das bedeutet insgesamt %s Person(en)",
@@ -25,7 +25,7 @@
   
   "$.Resultat.WarteRechnen": "Danke. Ich rechne für Dich nun ein Angebot für die %s Person(en).",
   "$.Resultat.Titel": "Vorschläge der Jahresmiete für %s Person(en)",
-  "$.Resultat.KommInShop": "Nimm dieses Angebot mit zu uns in den Laden, damit wir zusammen die beste Wahl für Dich treffen können. Tippe 'start' für ein weiteres Angebot",
+  "$.Resultat.KommInShop": "Nimm dieses Angebot mit zu uns in den Laden, damit wir zusammen die beste Wahl für Dich treffen können. Tippe 'start' für ein weiteres Angebot.",
   "$.Resultat.Oeffnungszeiten": "Wir sind von Mo - So, 10-20h in Uster für Dich.",
   "Nein, bin happy": "Nein, bin happy",
   "$.Resultat.BestenDank": "Besten Dank - wir freuen uns auf Deinen Besuch bei uns im Sports-Village.ch in Uster oder auf unserer WebSeite http://sports-village.ch",
