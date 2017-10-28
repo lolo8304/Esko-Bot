@@ -64,7 +64,7 @@ const ENTITIES = {
   ERWACHSENER: 'Person::Erwachsener',
   KINDER: 'Person::Kind',
   JUGENDLICHE: 'Person::Jugendlicher',
-  NUMBER: 'builtin.number'
+  NUMBER: 'Anzahl'
 };
 
 
@@ -1201,7 +1201,7 @@ function findPrefixNumberOfEntity(entities, entityName) {
       var diffIndex = entity.startIndex - numberEntity.endIndex;
       if (diffIndex >= 0) {
         if (diffIndex < minIndex) {
-          minNumber = parseInt(numberEntity.entity);
+          minNumber = parseInt(numberEntity.resolution.values[0]);
         } 
       }
     }
