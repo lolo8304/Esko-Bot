@@ -1,4 +1,6 @@
 {
+  "$.Intro.Hilfe": "Danke für Dein Interesse. Mein Name ist Esko und ich bin die digitale Kopie vom Inhaber des Sports-Village.ch.\n\nDurch Angabe von Anzahl Personen, Alter, Schuhe und Deine bevorzugte Piste, kann ich Dir ein persönliches Angebot machen.\n\nMit 'start' kannst Du beginnen",
+  
   "$.Intro.Fehler": "Sorry - aber ich habe Dich nicht verstanden",
   "$.Intro.Tschuess": "Tschüss - auf ein anderes Mal. Dein Esko vom Sports-Village.ch",
   "$.Ski.Abbruch" : "Ok... wir beginnen nochmals von vorn. Bitte mit 'start' beginnen",

@@ -151,7 +151,7 @@ var intents = new builder.IntentDialog({ recognizers: [recognizer] });
 bot.dialog('/', intents
     .matches('intro', '/Intro')
     .matches('GetStarted', '/GetStarted')
-    .matches('Test', '/Test')
+    .matches('help', '/Help')
 );
 
 
@@ -829,6 +829,13 @@ intents.onDefault(
     //builder.DialogAction.send("$.Intro.Fehler")
 );
 
+bot.dialog('/Help', [
+    function (session, args, next) {
+        builder.Prompts.text(session,"$.Intro.Hilfe");
+    }
+]);
+
+
 bot.dialog('/Test', [
     function (session, args, next) {
         builder.Prompts.text(session,"Typ, Piste, Schuhe");
@@ -1391,7 +1398,8 @@ function getRentalResult(user, data, cb) {
             angebot.preise.set.startingAt |= set.tage_100_ab;
             t++;
         }
-        angebot.additionalInfo.push("Jahresmiete bis 5.11. 10% Rabatt");
+        angebot.additionalInfo.push("Ihr Skimiete Angebot");
+        angebot.additionalInfo.push("Jahresmiete 10% Rabatt bis So 5. Nov 2017");
         for (var t = 0; t < data.length; t++) {
             if (data[t].schuhe) {
                 var schuheText = (t+1)+".Kind Schuhe "+data[t].schuhe;
@@ -1425,14 +1433,16 @@ function setSVGRentalResult(user, data, cb) {
             ], false);
         }
 
-        svg_table_row(buffer, ["", "", "", "", "", ""], false);
-        svg_table_row(buffer, ["Total", 
-            "", 
-            getPreisText(angebot.preise.ski),
-            getPreisText(angebot.preise.schuhe),
-            getPreisText(angebot.preise.stock),
-            getPreisText(angebot.preise.set)
-        ], false);
+        if (angebot.data.length > 1) {
+            svg_table_row(buffer, ["", "", "", "", "", ""], false);
+            svg_table_row(buffer, ["Total", 
+                "", 
+                getPreisText(angebot.preise.ski),
+                getPreisText(angebot.preise.schuhe),
+                getPreisText(angebot.preise.stock),
+                getPreisText(angebot.preise.set)
+            ], false);
+        }
         svg_table_row(buffer, ["", "", "", "", "", ""], false);  
         angebot.additionalInfo.forEach(function(text) {
             svg_table_row(buffer, [text, "", "", "", "", ""], false);                    
