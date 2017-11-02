@@ -354,9 +354,9 @@ function getHttpErrorCode(e) {
     if (hasError) {
         var myRegexp = /^\[(.*)\].*$/;
         var match = myRegexp.exec(e.message);
-        return match[1];
+        return parseInt(match[1], 10);
     } else {
-        return "500";
+        return 500;
     }
 }
 
@@ -373,16 +373,19 @@ function isError(e, docs, defaultString) {
 function handleError(res, e, docs, defaultString) {
     if (e && e.name == "RestApiError") {
         console.log("handle error: e="+e+", docs="+docs+", str="+defaultString);
-        res.status(getHttpErrorCode(e)).send(e.message);
+        res.status(getHttpErrorCode(e))
+        res.send(e.message);
         //res.render('500', {error: err, stack: err.stack});
         return true;
     } else if (e) {
         console.log("handle error: e="+e+", docs="+docs+", str="+defaultString);
-        res.status(500).send(e.message);
+        res.status(500)
+        res.send(e.message);
         return true;
     } else if (!docs && defaultString != undefined) {
         console.log("handle error: e="+e+", docs="+docs+", str="+defaultString);
-        res.status(404).send(defaultString);
+        res.status(404)
+        res.send(defaultString);
         return true;
     }
     return false;
@@ -512,6 +515,12 @@ function findLimited(req, res, collection, idName, query, sortColumn, fieldFilte
 
 }
 
+
+function verifyRESTSecurity(req) {
+    var keyFound = (req.header("app_key") === process.env.APP_KEY)
+    var secretFound = (req.header("app_secret") === process.env.APP_SECRET);
+    return keyFound && secretFound;
+}
 /************* start model **************************/
 
 
@@ -524,6 +533,10 @@ function registerModelAPIs(type, typeMultiple, idName, isIdInteger, hasLimitColl
     * GET models.
     */
     server.get('/model/'+typeMultiple, function(req, res, next) {
+        if (!verifyRESTSecurity(req)) {
+            return handleError(res,
+                new RestApiError("403", 'illegal KEY and SECRET'));
+        }
         var db = req.db;
         var collection = db.get(typeMultiple);
         if (hasLimitCollection) {
@@ -552,7 +565,11 @@ function registerModelAPIs(type, typeMultiple, idName, isIdInteger, hasLimitColl
         * GET model by id (integer)
         */
         server.get('/model/'+typeMultiple+'/:id', function(req, res, next) {
-            var db = req.db;
+            if (!verifyRESTSecurity(req)) {
+                return handleError(res,
+                    new RestApiError("403", 'illegal KEY and SECRET'));
+            }
+                var db = req.db;
             var collection = db.get(typeMultiple);
             if (!isInteger(req.params.id)) {
                 return handleError(res,
@@ -574,7 +591,11 @@ function registerModelAPIs(type, typeMultiple, idName, isIdInteger, hasLimitColl
         * GET model by id (string)
         */
         server.get('/model/'+typeMultiple+'/:id', function(req, res, next) {
-            var db = req.db;
+            if (!verifyRESTSecurity(req)) {
+                return handleError(res,
+                    new RestApiError("403", 'illegal KEY and SECRET'));
+            }
+                var db = req.db;
             var collection = db.get(typeMultiple);
             var idToSearch = req.params.id;
             if (idName == "_id") {
@@ -596,6 +617,10 @@ function registerModelAPIs(type, typeMultiple, idName, isIdInteger, hasLimitColl
     }
 
     server.get('/model/'+typeMultiple+'/search/byQuery/:query/:sort/:filter', function(req, res, next) {
+        if (!verifyRESTSecurity(req)) {
+            return handleError(res,
+                new RestApiError("403", 'illegal KEY and SECRET'));
+        }
         var db = req.db;
         var collection = db.get(typeMultiple);
         var queryStringToSearch = req.params.query;
@@ -634,6 +659,10 @@ function registerModelAPIs(type, typeMultiple, idName, isIdInteger, hasLimitColl
     });
 
     if (zipSearch.hasZipSearch) {
+        if (!verifyRESTSecurity(req)) {
+            return handleError(res,
+                new RestApiError("403", 'illegal KEY and SECRET'));
+        }
         server.get('/model/'+typeMultiple+'/search/byZip/:zip', function(req, res, next) {
             var db = req.db;
             var collection = db.get(typeMultiple);
@@ -655,6 +684,10 @@ function registerModelAPIs(type, typeMultiple, idName, isIdInteger, hasLimitColl
     }
 
     server.get('/model/'+typeMultiple+'/search/byWord/:text', function(req, res, next) {
+        if (!verifyRESTSecurity(req)) {
+            return handleError(res,
+                new RestApiError("403", 'illegal KEY and SECRET'));
+        }
         var db = req.db;
         var collection = db.get(typeMultiple);
         var options = {
@@ -679,6 +712,10 @@ function registerModelAPIs(type, typeMultiple, idName, isIdInteger, hasLimitColl
     });
 
     server.get('/model/'+typeMultiple+'/search/near/:longitude,:latitude,:meter', function(req, res, next) {
+        if (!verifyRESTSecurity(req)) {
+            return handleError(res,
+                new RestApiError("403", 'illegal KEY and SECRET'));
+        }
         var db = req.db;
         var collection = db.get(typeMultiple);
         if (!isNumeric(req.params.longitude)) {
@@ -713,6 +750,10 @@ function registerModelAPIs(type, typeMultiple, idName, isIdInteger, hasLimitColl
     });
 
     server.get('/model/'+typeMultiple+'/:typ/:alter/:farbe', function(req, res, next) {
+        if (!verifyRESTSecurity(req)) {
+            return handleError(res,
+                new RestApiError("403", 'illegal KEY and SECRET'));
+        }
         var db = req.db;
         var collection = db.get(typeMultiple);
         var options = {
@@ -745,7 +786,12 @@ function registerModelAPIs(type, typeMultiple, idName, isIdInteger, hasLimitColl
         }
         findLimited(req, res, collection, "id", filter, {"id" : 1});
     });
-        server.get('/model/'+typeMultiple+'/:typ/:alter/:farbe/:kategorie', function(req, res, next) {
+
+    server.get('/model/'+typeMultiple+'/:typ/:alter/:farbe/:kategorie', function(req, res, next) {
+        if (!verifyRESTSecurity(req)) {
+            return handleError(res,
+                new RestApiError("403", 'illegal KEY and SECRET'));
+        }
         var db = req.db;
         var collection = db.get(typeMultiple);
         var options = {
@@ -923,23 +969,27 @@ bot.dialog('/Intro', [
 
 bot.dialog('/Ski', [
   function (session, args, next) {
-    session.beginDialog("/Ski/PersonenAuswahl")
+    session.userData.angebot = {
+        intent: "Ski",
+    };
+    session.beginDialog("/"+session.userData.angebot.intent+"/PersonenAuswahl")
   },
   function (session, results, next) {
     if (results.countTotal > 0) {
       session.userData.angebot = {
+        intent: "Ski",
         type: "ski",
         counts: results,
         todoCount: JSON.parse(JSON.stringify(results)),
         personen: []
       }
-      session.beginDialog("/Ski/PersonenEingaben")
+      session.beginDialog("/"+session.userData.angebot.intent+"/PersonenEingaben")
     } else {
       session.endDialog();
     }
   },
   function (session, results, next) {
-    session.beginDialog("/Ski/Angebot")
+    session.beginDialog("/"+session.userData.angebot.intent+"/Angebot")
   }
 ]);
 
@@ -982,7 +1032,7 @@ function angebotTitlePersonen(angebot, data) {
     return text;
 }
 
-bot.dialog('/Ski/Angebot', [
+bot.dialog("/Ski/Angebot", [
   function (session, args, next) {
         var personen = session.userData.angebot.personen;
         var data = [];
@@ -1007,9 +1057,9 @@ bot.dialog('/Ski/Angebot', [
 
             var msg = new builder.Message(session).addAttachment(card);
             session.send(msg);
-            //choices(session, "$.Resultat.NochWas", "$.Resultat.NochWas.Choices");
             session.sendBatch();
             session.endDialog();
+            session.userData.angebot = undefined;            
     });
   }
 ]);
@@ -1023,7 +1073,7 @@ function getNextPerson(angebot) {
         type: "Erwachsener", 
         typeMultiple: "Erwachsene",
         typeWithArtikel: "der %s. Erwachsene", 
-        indent: "/Ski/Erwachsener",
+        indent: "/"+angebot.intent+"/Erwachsener",
         index: angebot.counts.countErwachsene - todo.countErwachsene
       }
     } else if (todo.countJugendliche > 0) {
@@ -1031,7 +1081,7 @@ function getNextPerson(angebot) {
         type: "Jugendlicher", 
         typeMultiple: "Jugendliche",
         typeWithArtikel: "der %s. Jugendliche", 
-        indent: "/Ski/Jugendlicher",
+        indent: "/"+angebot.intent+"/Jugendlicher",
         index: angebot.counts.countJugendliche - todo.countJugendliche
       }
     } else {
@@ -1039,7 +1089,7 @@ function getNextPerson(angebot) {
         type: "Kind", 
         typeMultiple: "Kinder",
         typeWithArtikel: "das %s. Kind", 
-        indent: "/Ski/Kind",
+        indent: "/"+angebot.intent+"/Kind",
         index: angebot.counts.countKinder - todo.countKinder
       }
     }
@@ -1048,10 +1098,10 @@ function getNextPerson(angebot) {
   }
 }
 
-bot.dialog('/Ski/PersonenEingaben', [
+bot.dialog("/Ski/PersonenEingaben", [
   function (session, args, next) {
     session.send("$.Ski.BestätigungPersonen", session.userData.angebot.counts.countTotal);
-    session.beginDialog("/Ski/Person");
+    session.beginDialog("/"+session.userData.angebot.intent+"/Person");
   },
   function (session, results, next) {
     if (results.response) {
@@ -1064,7 +1114,7 @@ bot.dialog('/Ski/PersonenEingaben', [
 ]).cancelAction('/Intro', "$.Ski.Abbruch", { matches: /(intro|help|start)/i });
 
 
-bot.dialog('/Ski/Person', [
+bot.dialog("/Ski/Person", [
   function (session, args, next) {
     var nextPerson = getNextPerson(session.userData.angebot);
     if (nextPerson) {
@@ -1076,14 +1126,14 @@ bot.dialog('/Ski/Person', [
   function (session, results, next) {
     if (results.response) {
       session.userData.angebot.personen.push(results.response);
-      session.replaceDialog("/Ski/Person");
+      session.replaceDialog("/"+session.userData.angebot.intent+"/Person");
     } else {
       session.cancelDialog();
     }
   }
 ]);
 
-bot.dialog('/Ski/Erwachsener', [
+bot.dialog("/Ski/Erwachsener", [
   function (session, args, next) {
     session.dialogData.person = args;
     session.beginDialog("/Ski/PisteErwachsener", args);
@@ -1104,7 +1154,7 @@ bot.dialog('/Ski/Erwachsener', [
   }
 ]);
 
-bot.dialog('/Ski/Kind', [
+bot.dialog("/Ski/Kind", [
     function (session, args, next) {
         session.dialogData.person = args;
         session.beginDialog("/Ski/KinderAlter", args);
@@ -1154,7 +1204,7 @@ bot.dialog('/Ski/Kind', [
     }
 ]);
 
-bot.dialog('/Ski/Jugendlicher', [
+bot.dialog("/Ski/Jugendlicher", [
     function (session, args, next) {
         session.dialogData.person = args;
         session.beginDialog("/Ski/JugendlicherAlter", args);
@@ -1190,35 +1240,35 @@ bot.dialog('/Ski/Jugendlicher', [
 ]);
 
 
-bot.dialog('/Ski/KinderAlter', [
+bot.dialog("/Ski/KinderAlter", [
     function (session, args, next) {
         var nThPersonText = getTT(session, args.typeWithArtikel, args.index+1);
         choices(session, "$.Person.KindAlter", "$.Person.KindAlter.Choices", nThPersonText);
     }
   ]).cancelAction('/Intro', "$.Ski.Abbruch", { matches: /(intro|help|start)/i });
   
-  bot.dialog('/Ski/JugendlicherAlter', [
+  bot.dialog("/Ski/JugendlicherAlter", [
     function (session, args, next) {
         var nThPersonText = getTT(session, args.typeWithArtikel, args.index+1);
         choices(session, "$.Person.JugendlicherAlter", "$.Person.JugendlicherAlter.Choices", nThPersonText);
     }
   ]).cancelAction('/Intro', "$.Ski.Abbruch", { matches: /(intro|help|start)/i });
 
-bot.dialog('/Ski/PisteErwachsener', [
+bot.dialog("/Ski/PisteErwachsener", [
   function (session, args, next) {
     var nThPersonText = getTT(session, args.typeWithArtikel, args.index+1);
     choices(session, "$.Person.Piste", "$.Person.Piste.Choices", nThPersonText);
   }
 ]).cancelAction('/Intro', "$.Ski.Abbruch", { matches: /(intro|help|start)/i });
 
-bot.dialog('/Ski/PisteKind', [
+bot.dialog("/Ski/PisteKind", [
   function (session, args, next) {
     var nThPersonText = getTT(session, args.typeWithArtikel, args.index+1);
     choices(session, "$.Person.Piste", "$.Person.Piste.Kinder.Choices", nThPersonText);
   }
 ]).cancelAction('/Intro', "$.Ski.Abbruch", { matches: /(intro|help|start)/i });
 
-bot.dialog('/Ski/SchuheKind', [
+bot.dialog("/Ski/SchuheKind", [
     function (session, args, next) {
         var nThPersonText = getTT(session, args.typeWithArtikel, args.index+1);
         choices(session, "$.Person.KindSchuh", "$.Person.KindSchuh.Choices", nThPersonText);
@@ -1226,7 +1276,7 @@ bot.dialog('/Ski/SchuheKind', [
   ]).cancelAction('/Intro', "$.Ski.Abbruch", { matches: /(intro|help|start)/i });
     
 
-bot.dialog('/Ski/PisteJugendlicher', [
+bot.dialog("/Ski/PisteJugendlicher", [
     function (session, args, next) {
         var nThPersonText = getTT(session, args.typeWithArtikel, args.index+1);
         choices(session, "$.Person.Piste", "$.Person.Piste.Jugendlicher.Choices", nThPersonText);
@@ -1252,7 +1302,7 @@ function findPrefixNumberOfEntity(entities, entityName) {
   return minNumber; 
 }
 
-bot.dialog('/Ski/PersonenAuswahl', [
+bot.dialog("/Ski/PersonenAuswahl", [
   function (session, args, next) {
     builder.Prompts.text(session,"$.Ski.Personen");
   },
@@ -1269,11 +1319,11 @@ bot.dialog('/Ski/PersonenAuswahl', [
           )
         } else {
           session.send("$.Ski.BestätigungPersonenFehler");
-          session.replaceDialog('/Ski/PersonenAuswahl')          
+          session.replaceDialog("/"+session.userData.angebot.intent+"/PersonenAuswahl")          
         }
       } else {
         session.send("$.Ski.BestätigungPersonenFehler");
-        session.replaceDialog('/Ski/PersonenAuswahl')
+        session.replaceDialog("/"+session.userData.angebot.intent+"/PersonenAuswahl")
       }
     });
   }
@@ -1291,7 +1341,13 @@ function getMinPrices(typ, alter, piste) {
         piste = "*"
     }
     var dataGETurl = process.env.ESKO_ENDPOINT_URL+"/model/skis/"+typ.toLowerCase()+"/"+alter.toLowerCase()+"/"+piste.toLowerCase();
-    return rp(dataGETurl);
+    var options = {
+        headers: {
+            APP_KEY    : process.env.APP_KEY,
+            APP_SECRET : process.env.APP_SECRET,
+        }
+    };
+    return rp(dataGETurl, options);
 }
 //http://localhost:3978/model/skis/set/kind/blau/29-34
 function getMinPrices(typ, alter, piste, kategorie) {
@@ -1302,7 +1358,13 @@ function getMinPrices(typ, alter, piste, kategorie) {
         piste = "*"
     }
     var dataGETurl = process.env.ESKO_ENDPOINT_URL+"/model/skis/"+typ.toLowerCase()+"/"+alter.toLowerCase()+"/"+piste.toLowerCase()+"/"+kategorie.toLowerCase();
-    return rp(dataGETurl);
+    var options = {
+        headers: {
+            APP_KEY    : process.env.APP_KEY,
+            APP_SECRET : process.env.APP_SECRET,
+        }
+    };
+    return rp(dataGETurl, options);
 }
 
 /* data contains
