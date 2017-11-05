@@ -137,114 +137,14 @@ bot.dialog('/', intents
 );
 
 bothelper = require("./modules/bot-helper.js")(bot, builder, recognizer);
-
-//===================
-// send mail
-//===================
-
-var nodemailer = require('nodemailer');
-
-var transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: process.env.SMTP_PORT,
-  secure: false,
-  requireTLS: false,
-  auth: {
-    user: process.env.SMTP_AUTH_USER,
-    pass: process.env.SMTP_AUTH_PWD
-  }
-});
-
-function sendBotMail(subject, body, TO) {
-    var mailOptions = {
-        from: process.env.SMTP_FROM_USER,
-        to: TO,
-        bcc: process.env.SMTP_CC_USER,
-        subject: subject,
-        text: body
-    };
-    
-    transporter.sendMail(mailOptions, function(error, info){
-    if (error) {
-        console.log(error);
-    } else {
-        console.log('Email sent: ' + info.response);
-    }
-    });
-    
-}
+email = require("./modules/email.js")();
+price = require("./modules/price.js")();
+svg = require("./modules/svg.js")(db, email, price);
 
 
 //=========================================================
-// start table image 
+// start SVG image 
 //=========================================================
-
-var numeral = require('numeral');
-
-function px2em(refPX, px) {
-    return numeral(px / refPX).format('0.00')+"em";
-}
-function em2px(refPX, em) {
-    var emNum = numeral(em.substr(0, em.indexOf("em"))).value();
-    return numeral(numeral(emNum * refPX).format('0.0')).value();
-}
-
-function svg_start(buffer) {
-    svg_content(buffer, "<svg xmlns=\'http://www.w3.org/2000/svg\' xmlns:xlink=\'http://www.w3.org/1999/xlink\'>");
-}
-function svg_content(buffer, text) {
-    buffer.text = buffer.text + text;
-}
-function svg_end(buffer) {
-    svg_content(buffer, "</svg>");
-}
-function svg_table_row_internal(buffer, data, isFontWeightBold) {
-    var bold = isFontWeightBold ? "font-weight='bold' fill='crimson'" : "";
-    svg_content(buffer, "<text x='"+buffer.table.startXY.x+"' y='"+buffer.table.startXY.y+"' text-anchor='middle' "+bold+">\n");
-    var posX = buffer.table.startXY.x;
-    var dyString = "dy='"+buffer.table.currentHeightEm+"em' font-weight='bold' fill='crimson' text-anchor='start'";
-    for (var i = 0; i < data.length; ++i) {
-        svg_content(buffer, "<tspan x='"+posX+"' "+dyString+">"+data[i]+"</tspan>\n");
-        posX = posX + buffer.table.widthArray[i];
-        dyString = "";
-    }
-    svg_content(buffer, "</text>");    
-}
-
-function svg_table_start(buffer, startXY, fontSize, widthArray) {
-    buffer.table = {
-        startXY: startXY,
-        fontSize: fontSize,
-        widthArray: widthArray,
-        totalWidth: 0,
-        highlightRow: 1,
-        currentHeightEm: 0
-    };
-    buffer.table.totalWidth = widthArray.reduce((sum, value) => sum + value, 0);
-    svg_content(buffer, "<g font-size='"+buffer.table.fontSize+"px'>\n");
-}
-function svg_table_row(buffer, data, isStrong) {
-    if (!isStrong) {
-        buffer.table.currentHeightEm += 1;
-        var opacity = 0.0;
-        if (buffer.table.highlightRow == 1) {
-            buffer.table.highlightRow = 0;
-            opacity = 0.2;
-        } else {
-            buffer.table.highlightRow = 1;
-            opacity = 0.4;
-        }
-        svg_content(buffer, "<rect x='"+(buffer.table.startXY.x-5)+"' y='"+(buffer.table.currentHeightEm+0.2)+"em' width='"+(buffer.table.totalWidth+10)+"' height='1em' fill='gainsboro' style='fill-opacity: "+opacity+"'/>\n");
-    }
-    svg_table_row_internal(buffer, data, isStrong);
-}
-
-function svg_box(buffer, x, y, w, h) {
-    svg_content(buffer, "<rect fill='#FFFFFF' x='"+x+"' y='"+y+"' width='"+w+"px' height='"+h+"px'/>\n");
-}
-function svg_table_end(buffer) {
-    svg_content(buffer, "</g>");
-}
 
 //=========================================================
 // start table image 
@@ -856,10 +756,10 @@ bot.dialog('/Test', [
             }
             var user = session.message.address.user;
             getRentalResult(user, [data], function (angebot) {
-                var content = "Ski: "+getPreisText(angebot.preise.ski);
-                content += ", Schuhe: "+getPreisText(angebot.preise.schuhe);
-                content += ", Stock: "+getPreisText(angebot.preise.stock);
-                content += ", Set: "+getPreisText(angebot.preise.set);
+                var content = "Ski: "+price.getPreisText(angebot.preise.ski);
+                content += ", Schuhe: "+price.getPreisText(angebot.preise.schuhe);
+                content += ", Stock: "+price.getPreisText(angebot.preise.stock);
+                content += ", Set: "+price.getPreisText(angebot.preise.set);
                 session.send(content);
                 session.sendBatch();
                 session.replaceDialog("/Test")
@@ -995,7 +895,7 @@ bot.dialog("/Ski/Angebot", [
 //        session.send("Danke - wir haben alle Information erhalten und berechnen nun das Angebot");
         session.sendTyping()
         session.sendBatch();
-        setSVGRentalResult(session.message.address.user, data, function (uuid, data, text) {
+        svg.setSVGRentalResult(session.message.address.user, data, function (uuid, data, text) {
             var link = process.env.ESKO_ENDPOINT_URL+"/miete.png?uuid="+uuid;
             var card = new builder.HeroCard(session)
                 .title("$.Resultat.Titel", session.userData.angebot.personen.length)
@@ -1281,235 +1181,6 @@ bot.dialog("/Ski/PersonenAuswahl", [
   }
 ]);
 
-var rp = require("request-promise");
-var LRUCache = require('lrucache');
-var svgResultCache = LRUCache(20);
-var hash = require('object-hash');
-
-
-//http://localhost:3978/model/skis/set/kind/blau
-function getMinPrices(typ, alter, piste) {
-    if (!piste) {
-        piste = "*"
-    }
-    var dataGETurl = process.env.ESKO_ENDPOINT_URL+"/model/skis/"+typ.toLowerCase()+"/"+alter.toLowerCase()+"/"+piste.toLowerCase();
-    var options = {
-        headers: {
-            APP_KEY    : process.env.APP_KEY,
-            APP_SECRET : process.env.APP_SECRET,
-        }
-    };
-    return rp(dataGETurl, options);
-}
-//http://localhost:3978/model/skis/set/kind/blau/29-34
-function getMinPrices(typ, alter, piste, kategorie) {
-    if (!kategorie) {
-        kategorie = "*"
-    }
-    if (!piste) {
-        piste = "*"
-    }
-    var dataGETurl = process.env.ESKO_ENDPOINT_URL+"/model/skis/"+typ.toLowerCase()+"/"+alter.toLowerCase()+"/"+piste.toLowerCase()+"/"+kategorie.toLowerCase();
-    var options = {
-        headers: {
-            APP_KEY    : process.env.APP_KEY,
-            APP_SECRET : process.env.APP_SECRET,
-        }
-    };
-    return rp(dataGETurl, options);
-}
-
-/* data contains
-    [
-                {"type":"Kind","piste":"Aktion"},
-                {"type":"Erwachsener","piste":"schwarz"},
-    ]
-*/
-const svg2png = require("svg2png");
-
-function saveObjectToDB(db, collectionName, object, callback_Error_UUID) {
-    var collection = db.get(collectionName);
-    collection.insert(object, function(e, insertedItem) {
-        callback_Error_UUID(e, insertedItem._id.toString());
-    });
-}
-function getObjectFromDB(db, collectionName, uuid, callback_UUID) {
-    var collection = db.get(collectionName);
-    collection.findOne({ _id : uuid }, function(e,docs){
-        if (isError(e, docs, 'No '+collectionName+' found with _id '+uuid)) {
-            callback_UUID(undefined);
-            return;
-        }
-        callback_UUID(docs);
-        return;
-    });
-}
-
-function isTestUserId(currentUserId) {
-    var testusers = process.env.TEST_USER_IDS.split(",");
-    for (var userId in testusers) {
-        if (testusers.hasOwnProperty(userId)) {
-            var userId = testusers[userId];
-            if (userId.trim() == currentUserId) {
-                return true
-            }
-        }
-    }
-    return false;
-}
-
-function getRentalResult(user, data, cb) {
-    var angebot = {
-        date: new Date(), 
-        test: isTestUserId(user.id), 
-        user: user, 
-        data: data, 
-        preise: {
-            ski: { value: 0, startingAt: false },
-            schuhe: { value: 0, startingAt: false },
-            stock: { value: 0, startingAt: false },
-            set: { value: 0, startingAt: false }
-        },
-        svg: undefined,
-        width: 0,
-        pngBase64Encoded: undefined,
-        additionalInfo: []
-    };
-    var dataPromise = [];
-    for (var i = 0; i < data.length; ++i) {
-        dataPromise.push(getMinPrices("ski", data[i].type, data[i].piste));
-        dataPromise.push(getMinPrices("schuhe", data[i].type, data[i].pisteSchuhe, data[i].schuhe));
-        dataPromise.push(getMinPrices("stock", data[i].type));
-        dataPromise.push(getMinPrices("set", data[i].type, data[i].piste, data[i].schuhe));
-    }
-    Promise.all(dataPromise).then(values => {
-        var t = 0;
-        var empty = {tage_100: 0, tage_100_ab: false};
-        for (var i = 0; i < values.length; ++i) {
-            var ski=JSON.parse(values[i++]).data[0] || empty;
-            var schuhe=JSON.parse(values[i++]).data[0] || empty;
-            var stock=JSON.parse(values[i++]).data[0] || empty;
-            var set=JSON.parse(values[i]).data[0] || empty;
-
-            data[t].shortType = data[t].type.substr(0, 1);
-            data[t].no = t+1;
-            data[t].preise = {
-                ski:    { value: ski.tage_100,      startingAt: ski.tage_100_ab },
-                schuhe: { value: schuhe.tage_100,   startingAt: schuhe.tage_100_ab },
-                stock:  { value: stock.tage_100,    startingAt: stock.tage_100_ab },
-                set:    { value: set.tage_100,      startingAt: set.tage_100_ab }
-            }
-            angebot.preise.ski.value += ski.tage_100;
-            angebot.preise.ski.startingAt |= ski.tage_100_ab;
-
-            angebot.preise.schuhe.value += schuhe.tage_100;
-            angebot.preise.schuhe.startingAt |= schuhe.tage_100_ab;
-
-            angebot.preise.stock.value += stock.tage_100;
-            angebot.preise.stock.startingAt |= stock.tage_100_ab;
-
-            angebot.preise.set.value += set.tage_100;
-            angebot.preise.set.startingAt |= set.tage_100_ab;
-            t++;
-        }
-        angebot.additionalInfo.push("Ihr Skimiete Angebot");
-        angebot.additionalInfo.push("Jahresmiete 10% Rabatt bis So 5. Nov 2017");
-        for (var t = 0; t < data.length; t++) {
-            if (data[t].schuhe) {
-                var schuheText = (t+1)+".Kind Schuhe "+data[t].schuhe;
-                angebot.additionalInfo.push(schuheText);
-            }
-        }
-        cb(angebot)        
-    }); // end promise
-}
-
-function getPreisText(preise) {
-    return (preise.startingAt ? "ab ":"")+preise.value+".-"
-}
-
-function setSVGRentalResult(user, data, cb) {
-    var buffer = {text: ""};
-    svg_start(buffer);
-    svg_table_start(buffer, {x:20, y:'2em'}, 16, [70, 70, 70, 70, 70, 70]);
-    svg_box(buffer, 0, 0, buffer.table.totalWidth, buffer.table.totalWidth / 2);
-    svg_table_row(buffer, ["Wer", "Piste", "Ski", "Schuhe", "Stock", "Set"], true);
-    getRentalResult(user, data, function (angebot) {
-        for (var index = 0; index < angebot.data.length; index++) {
-            var element = angebot.data[index];
-            svg_table_row(buffer, [
-                element.no+":"+element.shortType, 
-                element.piste, 
-                getPreisText(element.preise.ski), 
-                getPreisText(element.preise.schuhe), 
-                getPreisText(element.preise.stock), 
-                getPreisText(element.preise.set)
-            ], false);
-        }
-
-        if (angebot.data.length > 1) {
-            svg_table_row(buffer, ["", "", "", "", "", ""], false);
-            svg_table_row(buffer, ["Total", 
-                "", 
-                getPreisText(angebot.preise.ski),
-                getPreisText(angebot.preise.schuhe),
-                getPreisText(angebot.preise.stock),
-                getPreisText(angebot.preise.set)
-            ], false);
-        }
-        svg_table_row(buffer, ["", "", "", "", "", ""], false);  
-        angebot.additionalInfo.forEach(function(text) {
-            svg_table_row(buffer, [text, "", "", "", "", ""], false);                    
-        }, this);
-        svg_table_end(buffer);
-        svg_end(buffer);
-        angebot.svg = buffer.text;
-        angebot.width = buffer.table.totalWidth;
-        var pngBuffer = svg2png.sync(new Buffer(buffer.text), { width: buffer.table.totalWidth, height: buffer.table.totalWidth /2 });
-        angebot.pngBase64Encoded = pngBuffer.toString('base64');
-        saveObjectToDB(db, "angebote", angebot, function(error, uuid) {
-            svgResultCache.set(uuid, angebot);
-            var pngUrl = process.env.ESKO_ENDPOINT_URL+"/miete.png?uuid="+uuid;
-            console.log("cache size svgResultCache: "+svgResultCache.info().length+" of "+svgResultCache.info().capacity);
-            sendBotMail(
-                "Esko Bot - Angebot abgegeben - " + angebot.user.name + (angebot.test ? " - Test" : ""), 
-                getBotRequestBodyText(angebot, pngUrl),
-                (angebot.test ? process.env.SMTP_TO_USER_TEST : process.env.SMTP_TO_USER)
-            );
-            cb(uuid, data, buffer.text);
-        }); // end save object callback
-    }); // end getResult callback
-}
-
-function getBotRequestBodyText(angebot, url) {
-    var contents = fs.readFileSync('./locale/de/email-template.html', 'utf8');
-    // data.preise = {
-    //     ski, schuhe, stock, set
-    //}
-    var preise = angebot.preise;
-    contents = contents.replace("$data.ski", preise.ski);
-    contents = contents.replace("$data.schuhe", preise.schuhe);
-    contents = contents.replace("$data.stock", preise.stock);
-    contents = contents.replace("$data.set", preise.set);
-    contents = contents.replace("$data.png", url);
-    contents = contents.replace("$user.id", angebot.user.id);
-    contents = contents.replace("$user.name", angebot.user.name);
-    contents = contents.replace("$date", angebot.date.toString());
-    contents = contents.replace("$data.count", angebot.data.length);
-    
-    return contents;
-}
-
-
-function getCachedObject(collectionName, uuid, callback_Object) {
-    var object = svgResultCache.get(uuid);
-    if (uuid && !object) {
-        getObjectFromDB(db, collectionName, uuid, callback_Object);
-    } else {
-        callback_Object(object);        
-    }
-}
-
 
 //based http://svg-whiz.com/svg/table.svg
 // [
@@ -1519,7 +1190,7 @@ function getCachedObject(collectionName, uuid, callback_Object) {
 //
 server.get('/miete.svg', function(req, res, next) {
     var uuid = req.param("uuid");
-    getCachedObject("angebote", uuid, function (object) {
+    svg.getCachedObject("angebote", uuid, function (object) {
         if (uuid && object) {
             console.log("found from svgResultCache: "+uuid);
             res.setHeader('Content-Disposition', "inline; filename=test.svg");
@@ -1534,7 +1205,7 @@ server.get('/miete.svg', function(req, res, next) {
 
 server.get('/miete.png', function(req, res, next) {
     var uuid = req.param("uuid");
-    getCachedObject("angebote", uuid, function(object) {
+    svg.getCachedObject("angebote", uuid, function(object) {
         if (uuid && object) {
             console.log("found from svgResultCache: "+uuid);
             res.setHeader('Content-Disposition', "inline; filename="+uuid+".png");
