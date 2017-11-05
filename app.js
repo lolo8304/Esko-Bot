@@ -15,26 +15,6 @@ require('dotenv').config();
 var _ = require('lodash');
 var moment = require('moment');
 
-var localeTexts = JSON.parse(fs.readFileSync("./locale/de/index.json", "utf8"));
-
-function getT(session, text) {
-    if (session) {
-        return session.localizer.gettext(session.preferredLocale(), text)
-    } else {
-        return localeTexts[text];
-    }
-}
-function getTT(session, text, ...args) {
-    return sprintf.sprintf(getT(session, text), args)
-}
-function choices(session, text, choices, ...args) {
-    var intro = sprintf.sprintf(getT(session, text), args);
-    var options = getT(session, choices);
-    //builder.Prompts.choice(session, intro, options, {listStyle: builder.ListStyle["inline"]});
-    builder.Prompts.choice(session, intro, options, {listStyle: builder.ListStyle["button"]});
-    //builder.Prompts.choice(session, intro, options);
-}
-
 
 // Setup Restify Server
 var server = restify.createServer();
@@ -83,8 +63,8 @@ bot.on('conversationUpdate', function (message) {
             /* use no $ variable because session is not available */
             var cardImage = builder.CardImage.create(null, process.env.ESKO_ENDPOINT_URL+"/images/esko.bot.png");
             var card = new builder.HeroCard()
-                .title(getT(null, "$.Intro.Title"))
-                .text(getT(null, "$.Intro.Willkommen"))
+                .title(bothelper.getT(null, "$.Intro.Title"))
+                .text(bothelper.getT(null, "$.Intro.Willkommen"))
                 .images([
                     cardImage
                 ]);
@@ -101,7 +81,7 @@ bot.on('conversationUpdate', function (message) {
                     /* use no $ variable because session is not available */
                     var reply = new builder.Message()
                         .address(message.address)
-                        .text(getT(null, "$.Intro.Tschuess"));
+                        .text(bothelper.getT(null, "$.Intro.Tschuess"));
                     bot.send(reply);
                 }
             });
@@ -117,8 +97,8 @@ bot.on('contactRelationUpdate', function (message) {
         /* use no $ variable because session is not available */
         var cardImage = builder.CardImage.create(null, process.env.ESKO_ENDPOINT_URL+"/images/esko.bot.png");
         var card = new builder.HeroCard()
-            .title(getT(null, "$.Intro.Title"))
-            .text(getT(null, "$.Intro.Willkommen"))
+            .title(bothelper.getT(null, "$.Intro.Title"))
+            .text(bothelper.getT(null, "$.Intro.Willkommen"))
             .images([
                 cardImage
             ]);
@@ -153,6 +133,8 @@ bot.dialog('/', intents
     .matches('GetStarted', '/GetStarted')
     .matches('help', '/Help')
 );
+
+bothelper = require("./modules/bot-helper.js")(bot, builder, recognizer);
 
 
 //=========================================================
@@ -920,8 +902,8 @@ bot.dialog('/GetStarted', [
           session.preferredLocale("de");
           var cardImage = builder.CardImage.create(null, process.env.ESKO_ENDPOINT_URL+"/images/esko.bot.png");
           var card = new builder.HeroCard(session)
-              .title(getT(session, "$.Intro.Title"))
-              .text(getT(session, "$.Intro.Willkommen"))
+              .title(bothelper.getT(session, "$.Intro.Title"))
+              .text(bothelper.getT(session, "$.Intro.Willkommen"))
               .images([
                   cardImage
               ]);
@@ -937,7 +919,7 @@ bot.dialog('/Intro', [
   function (session, args, next) {
         session.preferredLocale("de");
         session.send("Lass uns starten.")
-        choices(session, "$.Intro.Auswahl", "$.Intro.Auswahl.Choices");
+        bothelper.choices(session, "$.Intro.Auswahl", "$.Intro.Auswahl.Choices");
         session.sendBatch();
     },
   function (session, results, next) {
@@ -1242,44 +1224,44 @@ bot.dialog("/Ski/Jugendlicher", [
 
 bot.dialog("/Ski/KinderAlter", [
     function (session, args, next) {
-        var nThPersonText = getTT(session, args.typeWithArtikel, args.index+1);
-        choices(session, "$.Person.KindAlter", "$.Person.KindAlter.Choices", nThPersonText);
+        var nThPersonText = bothelper.getTT(session, args.typeWithArtikel, args.index+1);
+        bothelper.choices(session, "$.Person.KindAlter", "$.Person.KindAlter.Choices", nThPersonText);
     }
   ]).cancelAction('/Intro', "$.Ski.Abbruch", { matches: /(intro|help|start)/i });
   
   bot.dialog("/Ski/JugendlicherAlter", [
     function (session, args, next) {
-        var nThPersonText = getTT(session, args.typeWithArtikel, args.index+1);
-        choices(session, "$.Person.JugendlicherAlter", "$.Person.JugendlicherAlter.Choices", nThPersonText);
+        var nThPersonText = bothelper.getTT(session, args.typeWithArtikel, args.index+1);
+        bothelper.choices(session, "$.Person.JugendlicherAlter", "$.Person.JugendlicherAlter.Choices", nThPersonText);
     }
   ]).cancelAction('/Intro', "$.Ski.Abbruch", { matches: /(intro|help|start)/i });
 
 bot.dialog("/Ski/PisteErwachsener", [
   function (session, args, next) {
-    var nThPersonText = getTT(session, args.typeWithArtikel, args.index+1);
-    choices(session, "$.Person.Piste", "$.Person.Piste.Choices", nThPersonText);
+    var nThPersonText = bothelper.getTT(session, args.typeWithArtikel, args.index+1);
+    bothelper.choices(session, "$.Person.Piste", "$.Person.Piste.Choices", nThPersonText);
   }
 ]).cancelAction('/Intro', "$.Ski.Abbruch", { matches: /(intro|help|start)/i });
 
 bot.dialog("/Ski/PisteKind", [
   function (session, args, next) {
-    var nThPersonText = getTT(session, args.typeWithArtikel, args.index+1);
-    choices(session, "$.Person.Piste", "$.Person.Piste.Kinder.Choices", nThPersonText);
+    var nThPersonText = bothelper.getTT(session, args.typeWithArtikel, args.index+1);
+    bothelper.choices(session, "$.Person.Piste", "$.Person.Piste.Kinder.Choices", nThPersonText);
   }
 ]).cancelAction('/Intro', "$.Ski.Abbruch", { matches: /(intro|help|start)/i });
 
 bot.dialog("/Ski/SchuheKind", [
     function (session, args, next) {
-        var nThPersonText = getTT(session, args.typeWithArtikel, args.index+1);
-        choices(session, "$.Person.KindSchuh", "$.Person.KindSchuh.Choices", nThPersonText);
+        var nThPersonText = bothelper.getTT(session, args.typeWithArtikel, args.index+1);
+        bothelper.choices(session, "$.Person.KindSchuh", "$.Person.KindSchuh.Choices", nThPersonText);
     }
   ]).cancelAction('/Intro', "$.Ski.Abbruch", { matches: /(intro|help|start)/i });
     
 
 bot.dialog("/Ski/PisteJugendlicher", [
     function (session, args, next) {
-        var nThPersonText = getTT(session, args.typeWithArtikel, args.index+1);
-        choices(session, "$.Person.Piste", "$.Person.Piste.Jugendlicher.Choices", nThPersonText);
+        var nThPersonText = bothelper.getTT(session, args.typeWithArtikel, args.index+1);
+        bothelper.choices(session, "$.Person.Piste", "$.Person.Piste.Jugendlicher.Choices", nThPersonText);
     }
   ]).cancelAction('/Intro', "$.Ski.Abbruch", { matches: /(intro|help|start)/i });
   
