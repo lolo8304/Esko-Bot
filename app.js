@@ -1014,7 +1014,7 @@ bot.dialog("/Ski/Kind", [
     function (session, results, next) {
         if (results.response) {
             session.dialogData.person.alter = results.response.entity;
-            if (session.dialogData.person.alter == getT(session, "$.Person.KindAlter.Unter12Jahren")) {
+            if (session.dialogData.person.alter == bothelper.getT(session, "$.Person.KindAlter.Unter12Jahren")) {
                 session.dialogData.person.realType = "Kind";
                 session.beginDialog("/Ski/SchuheKind", session.dialogData.person);
             } else {
@@ -1031,10 +1031,10 @@ bot.dialog("/Ski/Kind", [
             session.beginDialog("/Ski/PisteKind", session.dialogData.person);
         } else {
             /* passed schuhe question, goto piste */
-            if (session.dialogData.person.alter == getT(session, "$.Person.KindAlter.12_18Jahre")) {
+            if (session.dialogData.person.alter == bothelper.getT(session, "$.Person.KindAlter.12_18Jahre")) {
                 session.dialogData.person.realType = "Jugendlicher";
                 session.beginDialog("/Ski/PisteJugendlicher", session.dialogData.person);
-            } else if (session.dialogData.person.alter == getT(session, "$.Person.KindAlter.Ueber18Jahre")) {
+            } else if (session.dialogData.person.alter == bothelper.getT(session, "$.Person.KindAlter.Ueber18Jahre")) {
                 session.dialogData.person.realType = "Erwachsener";
                 session.beginDialog("/Ski/PisteErwachsener", session.dialogData.person);
             }
@@ -1064,10 +1064,10 @@ bot.dialog("/Ski/Jugendlicher", [
     function (session, results, next) {
         if (results.response) {
             session.dialogData.person.alter = results.response.entity;
-            if (session.dialogData.person.alter == getT(session, "$.Person.JugendlicherAlter.12_18Jahre")) {
+            if (session.dialogData.person.alter == bothelper.getT(session, "$.Person.JugendlicherAlter.12_18Jahre")) {
                 session.dialogData.person.realType = "Jugendlicher";
                 session.beginDialog("/Ski/PisteJugendlicher", session.dialogData.person);
-            } else if (session.dialogData.person.alter == getT(session, "$.Person.JugendlicherAlter.Ueber18Jahre")) {
+            } else if (session.dialogData.person.alter == bothelper.getT(session, "$.Person.JugendlicherAlter.Ueber18Jahre")) {
                 session.dialogData.person.realType = "Erwachsener";
                 session.beginDialog("/Ski/PisteErwachsener", session.dialogData.person);
             }
