@@ -14,6 +14,8 @@ var fs = require('fs');
 require('dotenv').config();
 var _ = require('lodash');
 var moment = require('moment');
+var database = require('./modules/db.js')();
+var db = database.db;
 
 
 // Setup Restify Server
@@ -135,38 +137,6 @@ bot.dialog('/', intents
 );
 
 bothelper = require("./modules/bot-helper.js")(bot, builder, recognizer);
-
-
-//=========================================================
-// Start Models
-//=========================================================
-
-// add mongo connection
-var mongo = require('mongodb');
-var monk = require('monk');
-
-// Connect to remote DB, settings are extended due to Firefall issues between nodejs -> mongodb
-// depending on the installed mongodb driver, settings are different
-// poolSize vs maxPoolSize
-// keepAlive vs socketOptions.keepAlive
-// connectTimeoutMS vs socketOptions.connectTimeoutMS
-var dbURL = process.env.DB_APP_USER+':'+process.env.DB_APP_PWD+'@'+process.env.DB_APP_URL
-    +'?'
-    +       'maxPoolSize=10'
-    +'&'+   'poolSize=10'
-    +'&'+   'keepAlive=60000'
-    +'&'+   'socketOptions.keepAlive=60000'
-    +'&'+   'connectTimeoutMS=10000'
-    +'&'+   'socketOptions.connectTimeoutMS=10000'
-    +'&'+   'reconnectTries=5';
-
-// uncomment for localhost database
-if (!process.env.DB_APP_USER) {
-    dbURL = process.env.DB_APP_URL;
-}
-    
-var db = monk(dbURL);
-console.log("mongodb connected with URL="+dbURL);
 
 //===================
 // send mail
