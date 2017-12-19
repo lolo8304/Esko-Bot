@@ -159,10 +159,10 @@ function SVG(db, email, price) {
         //     ski, schuhe, stock, set
         //}
         var preise = angebot.preise;
-        contents = contents.replace("$data.ski", preise.ski);
-        contents = contents.replace("$data.schuhe", preise.schuhe);
-        contents = contents.replace("$data.stock", preise.stock);
-        contents = contents.replace("$data.set", preise.set);
+        contents = contents.replace("$data.ski", getPreisText(preise.ski));
+        contents = contents.replace("$data.schuhe", getPreisText(preise.schuhe));
+        contents = contents.replace("$data.stock", getPreisText(preise.stock));
+        contents = contents.replace("$data.set", getPreisText(preise.set));
         contents = contents.replace("$data.png", url);
         contents = contents.replace("$user.id", angebot.user.id);
         contents = contents.replace("$user.name", angebot.user.name);
