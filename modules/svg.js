@@ -4,6 +4,16 @@ var LRUCache = require('lrucache');
 var hash = require('object-hash');
 var fs = require('fs');
 
+function isError(e, docs, defaultString) {
+    if (e && e.name == "RestApiError") {
+        return true;
+    } else if (e) {
+        return true;
+    } else if (!docs && defaultString != undefined) {
+        return true;
+    }
+    return false;
+}
 
 function getPreisText(preise) {
     return (preise.startingAt ? "ab ":"")+preise.value+".-"
